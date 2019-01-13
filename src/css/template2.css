@@ -1,24 +1,48 @@
+html {
+    box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+/* template */
+.template-block{
+    display:block;
+}
 .template{
-    display: none;
+    display:none;
 }
-
-/* icons */
-[class*=icono-]{
-    color:white;
+.hidden{
+    display:none !important;
 }
-/* buttons */
-.btn-none{
-    background: none;
-    border: none;
+/* block */
+.block {
+    display:block;
 }
-.btn-none:focus {
-    outline:0;
+/* alignment */
+.flex{
+    display: flex; 
+}
+.flex-center{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.vert-mid {
+    vertical-align: middle;
+}
+/* form */
+template-form{
+    padding: 15px;
+    text-align: left;
+}
+.form-group-radio label {
+    cursor: pointer;
+}
+.form-group-radio input{
+    display:none;
 }
 /* popup */
-.popup-open{
-    overflow: hidden;
-}
-.popup{
+template-popup{
     background:rgba(0, 0, 0, 0.75);
     bottom: 0;
     display: none;
@@ -32,56 +56,63 @@
     top: 0;
     z-index: 1000;
 }
-.popup-content{
+.template-popup-open{
+    overflow: hidden;
+}
+.template-popup-content{
     background:white;
     max-width:500px;
     margin: 30px auto;
 }
-.popup-content.auto{
+.template-popup-content.auto{
     max-width:none;
 }
-.popup-content.large{
+.template-popup-content.large{
     max-width:800px;
 }
-.popup-content.small{
+.template-popup-content.small{
     max-width: 300px;
 }
-.popup-content.full {
+.template-popup-content.full {
     max-width: 100%;
     width:100%;
 }
-.popup-header{
+.template-popup-header{
     padding:15px;
     position: relative;
 }
-.popup-closeBtn {
+.template-popup-closeBtn {
     position: absolute;
     top:10px;
     right: 10px;
 }
-.popup-body{
+.template-popup-body{
     padding:15px;
 }
-.popup-footer{
+.template-popup-footer{
     padding:15px;
 }
 /* feedback */
-.feedback{
+template-status-feedback {
     color:white;
+    display: block;
     margin:10px auto;
     padding:25px;
     position: relative;
     text-align: center;
 }
-.feedback-msg,
-.feedback-icon{
+.status-feedback-text,
+.status-feedback-icon{
+    color: white;
     display:inline-block;
     vertical-align: middle;
 }
-.feedback-icon{
+.status-feedback-icon{
     margin-right:15px;
 }
-.feedback-closeBtn{
+.status-feedback-closeBtn{
+    background:none;
+    border:none;
     height: 25px;
     position: absolute;
     top: 10px;
@@ -89,6 +120,9 @@
     width: 25px;
 }
 /* statuses */
+template-status-text{
+    transition:color 0.5s ease;
+}
 .status-success{
     color: rgb(28, 184, 65);
 }
@@ -115,7 +149,6 @@
 .status-bg-warning{
     background: rgb(223, 117, 20);
 }
-
 /* spinner */
 .spinner-container {
     width: 100%;
