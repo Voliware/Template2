@@ -4,16 +4,37 @@
  * GPL 3.0 license
  * 
  * Template is a front-end library used to render and
- * create re-useable HTMLElements via HTML and native Javascript,
- * and it rlies on the powerful customElements system. 
- * Custom elements are the best way to define new HTMLElements
- * with your own behaviours. 
- * Example: //customElements.define('my-element', MyController);
- * Template does not use the shadow dom. It is preferred that
- * DOM is accessible, especially to make developer's lives easy.
+ * create re-useable HTMLElements. It relies on the 
+ * Custom Elements system. Custom elements are a way to 
+ * define new HTMLElements with your own behaviours. 
+ * For example, you can define a custom HTMLElement in 
+ * your HTML page like so. 
+ * 
+ * <!-- html -->
+ * <my-element>
+ *    <div class="popup">
+ *        <div class="message"></div>
+ *    </div>
+ * </my-element>
+ * 
+ * // js
+ * class MyElement extends HTMLElement {
+ *     connectedCallback(){
+ *         this.innerHTML = "Some text";
+ *         this.addHandlers();
+ *     }
+ *     addHandlers(){
+ *         this.addEventListner('click', function(){
+ *             console.log("clicked!");
+ *         });
+ *     }
+ * }
+ * // this line hooks up the element to your class
+ * customElements.define('my-element', MyElement);
+ * 
  * Suggested, but not necessary reading: https://tinyurl.com/y7vqn4df.
  * 
- * It is built on the notion that your HTML stays in your .html 
+ * Template is built on the notion that your HTML stays in your .html 
  * files, and your javascript and logic stays in your .js files.
  * Template is extremely simple, and is not like learning a new
  * language or system like the complex render systems of today.
@@ -30,34 +51,47 @@
  * and so on. These static functions are just vanilla JS wrappers.
  * That means that Template does not need to convert the entire
  * element to a super-element of some sort. It performs the action
- * in the fastest way possible, which is just vanilla JS. All static
- * Template functions are also available as object functions when
- * you create an actual Template element, such as myTemplate.addClass('hidden').
+ * in the fastest way possible. All static Template functions are
+ * also available as object functions when you create an actual 
+ * Template element, such as myTemplate.addClass('hidden').
  * 
  * The Template class itself extends HTMLElement. It provides
  * methods to render the entire contents of the HTMLElement
- * with one function and one object of data. Data is matched
- * to HTMLElements based on some HTML attribute, typically 
+ * with one function and one object of data, render(). Data is 
+ * matched to HTMLElements based on some HTML attribute, typically 
  * "data-name". Template also provides a few common HTML 
  * and CSS manipulating methods like setting attributes.
  * Any time you extend the Template class to create your own
  * custom element, you simply extend Template, and at the bottom
  * of the class definition, register it with customElements.
- * Example: //customElements.define('my-element', MyController);
+ * 
+ * class MyElement extends Template { 
+ *     connectedCallback(){
+ *         this.hide();
+ *     }
+ * }
+ * customElements.define('my-element', MyElement);
+ * 
+ * Template does not use the shadow dom. It is preferred that
+ * DOM is accessible, especially to make developer's lives easy.
  * 
  * Template also wraps up a custom EventSystem, which perfectly mimics
  * jQuery's namespace-style events. That is, events can be namespaced
  * such as .on("click.dropdown") or further .on("click.dropdown.ev").
  * This EventSystem can also be used standalone.
  * 
- * The Template library also has a TemplateManager, which, when
+ * The Template library also has a ElementManager, which, when
  * given an array of objects, map of objects, or object of objects,
- * automagically creates, updates (renders), or destroys Templates.
+ * automagically creates, updates (renders), or destroys HTMLElements.
  * This can be used to easily generate a table of rows, where each
- * row is built off of the same Template that TemplateManager
- * knows about.
+ * row is built off of the same Template that ElementManager
+ * knows about. Of course, ElementManager can also render Templates. 
+ * This can be much more powerful because, when rendering, the 
+ * Template's render() function will be called. 
+ * Otherwise, if it is just an HTMLElement, the static method
+ * Template.render(element, data) will be callled.
  * 
- * Template and TemplateManager both have the notion of 
+ * Template and ElementManager both have the notion of 
  * preserving data and processing data. When either are
  * fed data to render(), the data is always cached as-is in an 
  * object called cachedData, and then processed into an object
@@ -65,11 +99,12 @@
  * 
  * This library also comes with some predefined classes that
  * extend Template: FormTemplate, TableTemplate, FeedbackTemplate, 
- * and StatusTextTemplate. 
+ * PopupTemplate, and StatusTextTemplate. 
  * FormTemplate wraps a basic <form> element and provides some 
  * improved serialization and submission functionality. 
  * TableTemplate wraps a basic <table> element and  provides easy
  * ways to build tables.
+ * PopupTemplate is a very simple popup or modal.
  * FeedbackTemplate and StatusTextTemplate are basic elements that 
  * provide an easy way to indicate the status of something, or to give
  * feedback on an action.
@@ -248,6 +283,10 @@ class EventSystem  {
         countHandlers(eventObject);
         return count;
 
+        /**
+         * Recursively count all handlers
+         * @param {object} obj 
+         */
         function countHandlers(obj){
             for(let k in obj){
                 if(k === "_handlers"){
@@ -380,34 +419,45 @@ class EventSystem  {
 }
   
 /**
- * Template manager.
- * Can create and manage Template objects.
- * Must be passed a cloneable Template element 
+ * Element Manager.
+ * Can create and manage HTMLElements and Templates.
+ * Must be passed a cloneable HTMLElement element 
  * in the constructor to be of any use.
  * @extends {EventSystem}
+ * @example
+ * // ElementManager would create 3 elements,
+ * // render them, and append them to itself
+ * let userTempalte = document.getElementById('userTemplate');
+ * let userList = document.getElementById('userList');
+ * let userElementManager = new ElementManager(userList, userTemplate);
+ * userElementManager.render([
+ *    {id:0, name: "Jim", status: "online"},
+ *    {id:1, name: "Pam", status: "offline"},
+ *    {id:2, name: "Michael", status: "online"},
+ * ]);
  */
-class TemplateManager extends EventSystem {
+class ElementManager extends EventSystem {
 
     /**
      * Constructor
-     * @param {HTLMElement} wrapper - wrapper element where templates are appended
-     * @param {Template} template - a cloneable element
+     * @param {HTLMElement} wrapper - wrapper element where elements are appended
+     * @param {HTMLElement} template - a cloneable HTMLElement or Template
      * @param {object} [options]
-     * @param {number} [options.maxTemplates=0] - max template count
+     * @param {number} [options.maxElements=0] - max element count
      * @param {boolean} [options.cloneTemplate=true] - whether to clone the initial
      *                  template from the DOM. Most of the time, you want to do this.   
      * @param {boolean} [options.removeTemplate=true] - whether to remove the initial
      *                  template on the DOM. Most of the time, you want to do this,
-     *                  unless there are many TemplateManagers using the same template.                  
+     *                  unless there are many ElementManagers using the same template.                  
      * @param {boolean} [options.removeDeadTemplates=true] - whether to remove dead 
      *                  templates. A template is dead when it does not exist 
      *                  in new data passed to render()
-     * @return {TemplateManager}
+     * @return {ElementManager}
      */
     constructor(wrapper, template, options){
         super();
         let defaults = {
-            maxTemplates: 0,
+            maxElements: 0,
             cloneTemplate: true,
             removeTemplate: true,
             removeDeadTemplates: true
@@ -419,7 +469,7 @@ class TemplateManager extends EventSystem {
          * will be appended to.
          * @type {HTMLElement}
          */
-        this.wrapper = wrapper ? wrapper : document.createElement("template-manager");
+        this.wrapper = wrapper;
 
         /**
          * A Template HTMLElement to create new templates from.
@@ -435,7 +485,7 @@ class TemplateManager extends EventSystem {
          *   "User2" => UserRowTemplate.. }
          * @type {Map}
          */
-        this.templates = new Map();
+        this.elements = new Map();
 
         // remove the original template from the DOM
         // it will always be cloneable from this.template
@@ -469,108 +519,102 @@ class TemplateManager extends EventSystem {
     
     /**
      * Empty the contents of the template manager
-     * @return {TemplateManager}
+     * @return {ElementManager}
      */
     empty(){
-        for(let [key, value] of this.templates){
-            // may be another template's child node
-            try{
-                this.wrapper.removeChild(value);
-            }
-            catch(e){
-                
-            }
-            this.templates.delete(key);
+        while (this.wrapper.firstChild) {
+            this.wrapper.removeChild(this.wrapper.firstChild);
         }
+        this.elements = {};
         return this;
     }
 
     /**
-     * Attach handlers to a template
-     * @param {Template} template 
-     * @return {TemplateManager}
+     * Attach handlers to an element
+     * @param {HTLMElement} element 
+     * @return {ElementManager}
      */
-    attachTemplateHandlers(template){
+    attachElementHandlers(element){
         return this;
     }
 
     /**
      * Create a new clone of the template.
      * Attach handlers to it.
-     * @return {Template}
+     * @return {HTLMElement}
      */
-    createTemplate(){
-        let template = this.template.cloneNode(true);
-        this.attachTemplateHandlers(template);
-        return template;
+    cloneTemplate(){
+        let element = this.template.cloneNode(true);
+        this.attachElementHandlers(element);
+        return element;
     }
 
     /**
-     * Append a template to the wrapper
-     * @param {Template} template 
-     * @return {TemplateManager}
+     * Append an element to the wrapper
+     * @param {HTLMElement} element 
+     * @return {ElementManager}
      */
-    appendTemplate(template){
-        this.wrapper.appendChild(template);
+    appendElement(element){
+        this.wrapper.appendChild(element);
         return this;
     }
 
     /**
-     * Append a template before an element
-     * @param {Template} template 
-     * @param {HTMLElement} element 
-     * @return {TemplateManager}
+     * Append an element before an element
+     * @param {HTLMElement} element 
+     * @param {HTMLElement} elementTo
+     * @return {ElementManager}
      */
-    appendTemplateBefore(template, element){
-        element.before(template);
+    appendElementBefore(element, elementTo){
+        elementTo.before(element);
         return this;
     }
 
     /**
-     * Append a template after an element
-     * @param {Template} template 
-     * @param {HTMLElement} element 
-     * @return {TemplateManager}
+     * Append an element after an element
+     * @param {HTLMElement} element 
+     * @param {HTMLElement} elementTo
+     * @return {ElementManager}
      */
-    appendTemplateAfter(template, element){
-        element.after(template);
+    appendElementAfter(element, elementTo){
+        elementTo.after(element);
         return this;
     }
 
     /**
-     * Remove a template by id.
+     * Remove an element by id.
      * Removes from the DOM and collection.
      * @param {string} id 
-     * @return {TemplateManager}
+     * @return {ElementManager}
      */
-    removeTemplate(id){
-        let template = this.templates.get(id);
-        if(template){
-            this.wrapper.removeChild(template);
-            this.templates.delete(id);
+    removeElement(id){
+        let element = this.elements.get(id);
+        if(element){
+            this.wrapper.removeChild(element);
+            this.elements.delete(id);
         }
         return this;
     }
 
     /**
-     * Remove dead templates. 
-     * Cross reference the list of current templates
+     * Remove dead elements. 
+     * Cross reference the list of current elements
      * with an object of data. If the template object's name
      * is not found in the data, then the template is considered dead (old).
-     * @example // The following objects currently exists in this.templates
+     * @example // The following objects currently exists in this.elements
      *           { user1:Template, user2:Template, user3:Template }
      *          // The following objects exist in the passed in data object
      *           { user2: {...}, user3: {...} }
      *          // user1 is missing in the data. Therefore, the template named
      *          // "user1" is no longer relevant, and is removed.
-     * @param {Template} template 
-     * @return {TemplateManager}
+     * @param {object} data
+     * @return {ElementManager}
      */
-    removeDeadTemplates(data){
-        for(let [key, template] of this.templates){
-            if(!this.getTemplateData(data, key)){
-                template.remove();
-                this.templates.delete(key);
+    removeDeadElements(data){
+        for(let [key, element] of this.elements){
+            if(!this.getData(data, key)){
+                element.remove();
+                this.elements.delete(key);
             }
         }
         return this;
@@ -601,11 +645,12 @@ class TemplateManager extends EventSystem {
      * match the key with an object.id property.
      * Otherwise, just match the name of the key
      * in a map of objects or object of objects.
+     * todo: rename.. to something better
      * @param {object[]|object|Map} data 
      * @param {string} key 
      * @return {null|object}
      */
-    getTemplateData(data, key){
+    getData(data, key){
         switch(this.getDataType(data)){
             case "array":
                 let el = data.filter(function(e){
@@ -623,10 +668,10 @@ class TemplateManager extends EventSystem {
 
     /**
      * Run through each object of data and render the object
-     * into a Template. If the data is new, the
-     * Template will be appended to the wrapper.
+     * into an element. If the data is new, the
+     * element will be appended to the wrapper.
      * @param {object[]|object|Map} data 
-     * @return {TemplateManager}
+     * @return {ElementManager}
      */
     render(data){
         this.cachedData = this.cacheData(data);
@@ -644,51 +689,51 @@ class TemplateManager extends EventSystem {
                 break;
         }
         if(this.options.removeDeadTemplates){
-            this.removeDeadTemplates(data);
+            this.removeDeadElements(data);
         }
         return this;
     }
 
     /**
-     * Render templates from an array of data.
+     * Render elements from an array of data.
      * Each object must have an "id" property.
      * @param {object[]} data 
-     * @return {TemplateManager}
+     * @return {ElementManager}
      */
     renderArray(data){
         for(let i = 0; i < data.length; i++){
             if(typeof data[i].id === "undefined"){
-                console.error("TemplateManager.renderArray: data must have an id property");
+                console.error("ElementManager.renderArray: data must have an id property");
                 return;
             }
-            this.renderTemplate(data[i].id, data[i], i);
+            this.renderElement(data[i].id, data[i], i);
         }
         return this;
     }
 
     /**
-     * Render templates from a map of objects.
+     * Render elements from a map of objects.
      * @param {Map} data 
-     * @return {TemplateManager}
+     * @return {ElementManager}
      */
     renderMap(data){
         let i = 0;
         for(let [key, value] of data){
-            this.renderTemplate(key, value, i);
+            this.renderElement(key, value, i);
             i++;
         }
         return this;
     }
 
     /**
-     * Render templates from an object of objects.
+     * Render elements from an object of objects.
      * @param {object} data 
-     * @return {TemplateManager}
+     * @return {ElementManager}
      */
     renderObject(data){
         let i = 0;
         for(let k in data){
-            this.renderTemplate(k, data[k], i);
+            this.renderElement(k, data[k], i);
             i++;
         }
         return this;
@@ -697,12 +742,12 @@ class TemplateManager extends EventSystem {
     /**
      * Render a single object of data by faking
      * it as an object of objects.
-     * Note that if removeDeadTemplates is 
+     * Note that if removeDeadElements is 
      * set to true (by default), this will 
-     * remove all other templates.
+     * remove all other elements.
      * @param {string} id 
      * @param {object} object 
-     * @return {TemplateManager}
+     * @return {ElementManager}
      */
     renderSingle(id, object){
         let obj = {};
@@ -712,26 +757,31 @@ class TemplateManager extends EventSystem {
     }
 
     /**
-     * Render a Template found in the template collection.
-     * If the Template does not exist, create it.
-     * @param {number|string} id - template and data identifier
+     * Render an element found in the element collection.
+     * If the element does not exist, create it.
+     * @param {number|string} id - element and data identifier
      * @param {object} data - object of data
-     * @param {number} index - the numerical index of the template
-     * @return {TemplateManager}
+     * @param {number} index - the numerical index of the element
+     * @return {ElementManager}
      */
-    renderTemplate(id, data, index){
+    renderElement(id, data, index){
         let isNew =  false;
-        let template = this.templates.get(id);
-        if(!template){
+        let element = this.elements.get(id);
+        if(!element){
             isNew = true;
-            template = this.createTemplate();
+            element = this.cloneTemplate();
         }
         
-        if(template){
-            this.templates.set(id, template);
+        if(element){
+            this.elements.set(id, element);
             if(isNew){
-                this.appendTemplate(template);
-                template.render(data);
+                this.appendElement(element);
+                if(element instanceof Template){
+                    element.render(data);
+                }
+                else {
+                    Template.render(element, data);
+                }                
             }
         }
 
@@ -1696,8 +1746,8 @@ class TableTemplate extends Template {
             }
         };
         super(Object.extend(defaults, options));
-        this.rows = {};
         this.schema = {};
+        this.rowManager = null;
         return this;
     }
 
@@ -1707,8 +1757,26 @@ class TableTemplate extends Template {
      */
     connectedCallback(){
         super.connectedCallback();
-        this.columnCount = this.dom.tr.querySelectorAll('td').length;
-        this.dom.tr.remove();
+        if(this.dom && this.dom.tr instanceof HTMLElement){
+            this.columnCount = this.dom.tr.querySelectorAll('td').length;
+            // remove the default row, it will be used as a template
+            this.dom.tr.remove();
+        }
+        this.createRowManager();
+    }
+
+    /**
+     * Create the row manager.
+     * If the tbody does not exist, this
+     * manager will exist only virtually
+     * until it is appended somewhere.
+     * @return {ElementManager}
+     */
+    createRowManager(){
+        let wrapper = (this.dom && this.dom.tbody instanceof HTMLElement)
+            ? this.dom.tbody
+            : document.createElement('div');
+        return this.rowManager = new ElementManager(wrapper, this.dom.tr);
     }
 
     /**
@@ -1722,56 +1790,29 @@ class TableTemplate extends Template {
     }
 
     /**
-     * Render the table
+     * Render the table.
+     * Essentially, pass the data to rowManager
+     * who will take care of rendering the rows.
      * @param {object} data 
-     * @return {Table}
+     * @return {TableTemplate}
      */
     render(data){
         this.cacheData(data);
         this.processRenderData(data);
-        if(this.options.alwaysRebuild){
-            this.emptyTable();
-        }
-        if(Array.isArray(this.renderData)){
-            if(!this.renderData.length){
-                return this;
-            }
-            if(typeof this.renderData[0] !== "object"){
-                return this;
-            }
-            // no primary key, cannot update rows
-            if(typeof this.renderData[0][this.options.primaryKey] === 'undefined'){
-                this.emptyTable();
-            }
-            for(let row of this.renderData){
-                this.createOrRenderRow(row);
-            }
-        }
-        else {
-            for(let k in this.renderData){
-                this.createOrRenderRow(this.renderData[k]);
-            }
-        }
-        return this;
-    }
 
-    /**
-     * Create a row if it does not already exist in the
-     * row collection. If it does exist, render it.
-     * @param {object} rowData
-     * @return {TableTemplate} 
-     */
-    createOrRenderRow(rowData){
-        let id = rowData[this.options.primaryKey];
-        if(this.rows[id]){
-            this.renderRow(this.rows[id], rowData);
+        // empty the table if the option is set
+        // or if the data is an array and there is no primary key
+        // without a primary key, we don't know how to manage rows
+        if(this.options.alwaysRebuild){
+            this.empty();
         }
-        else {
-            let row = this.cloneRow();
-            this.renderRow(row, rowData);
-            this.addRow(row, rowData[this.options.primaryKey]);
-            this.appendRow(row);
+        else if(Array.isArray(this.renderData)){
+            if(typeof this.renderData[0][this.options.primaryKey] === 'undefined'){
+                this.empty();
+            }
         }
+
+        this.rowManager.render(this.renderData);
         return this;
     }
 
@@ -1779,10 +1820,8 @@ class TableTemplate extends Template {
      * Empty the table tbody
      * @return {TableTemplate}
      */
-    emptyTable(){
-        while (this.dom.tbody.firstChild) {
-            this.dom.tbody.removeChild(this.dom.tbody.firstChild);
-        }
+    empty(){
+        this.rowManager.empty();
         return this;
     }
 
@@ -1854,34 +1893,12 @@ class TableTemplate extends Template {
     }
 
     /**
-     * Add a row to the row collection
+     * Append a row to the tobdy.
      * @param {HTMLElement} row
-     * @param {string} id - id in row collection
-     * @return {TableTemplate}
-     */
-    addRow(row, id){
-        this.rows[id] = row;
-        return this;
-    }
-
-    /**
-     * Add a header element
-     * @param {HTMLElement} header
      * @return {TableTemplate}
      */
     appendRow(row){
         this.dom.tbody.appendChild(row);
-        return this;
-    }
-
-    /**
-     * Render a row element from data
-     * @param {HTMLElement} header
-     * @param {object} rowData 
-     * @return {TableTemplate}
-     */
-    renderRow(row, rowData){
-        Template.render(row, rowData);
         return this;
     }
 
@@ -1917,11 +1934,10 @@ class TableTemplate extends Template {
 
     /**
      * Create a column
-     * @return {TableTemplate}
+     * @return {HTMLElement}
      */
     createColumn(){
-        let column = document.createElement('td');
-        return column;
+        return document.createElement('td');
     }
 
     /**
@@ -2128,22 +2144,20 @@ class PopupTemplate extends Template {
 customElements.define('template-popup', PopupTemplate);
 
 const Status = {
-    status: {
-        none: "none",
-        error: "error",
-        success: "success",
-        processing: "processing",
-        info: "info",
-        warning: "warning"
-    }
+    none: "none",
+    error: "error",
+    success: "success",
+    processing: "processing",
+    info: "info",
+    warning: "warning"
 };
 Status.class = {};
-Status.class[Status.status.none] = "status-none";
-Status.class[Status.status.error] = "status-error";
-Status.class[Status.status.success] = "status-success";
-Status.class[Status.status.processing] = "status-processing";
-Status.class[Status.status.info] = "status-info";
-Status.class[Status.status.warning] = "status-warning";
+Status.class[Status.none] = "status-none";
+Status.class[Status.error] = "status-error";
+Status.class[Status.success] = "status-success";
+Status.class[Status.processing] = "status-processing";
+Status.class[Status.info] = "status-info";
+Status.class[Status.warning] = "status-warning";
 Status.classArray = [
     Status.class.none,
     Status.class.error,
@@ -2154,12 +2168,12 @@ Status.classArray = [
 ];
 // background class
 Status.bgclass = {};
-Status.bgclass[Status.status.none] = "status-bg-none";
-Status.bgclass[Status.status.error] = "status-bg-error";
-Status.bgclass[Status.status.success] = "status-bg-success";
-Status.bgclass[Status.status.processing] = "status-bg-processing";
-Status.bgclass[Status.status.info] = "status-bg-info";
-Status.bgclass[Status.status.warning] = "status-bg-warning";
+Status.bgclass[Status.none] = "status-bg-none";
+Status.bgclass[Status.error] = "status-bg-error";
+Status.bgclass[Status.success] = "status-bg-success";
+Status.bgclass[Status.processing] = "status-bg-processing";
+Status.bgclass[Status.info] = "status-bg-info";
+Status.bgclass[Status.warning] = "status-bg-warning";
 Status.bgclassArray = [
     Status.bgclass.none,
     Status.bgclass.error,
@@ -2169,12 +2183,12 @@ Status.bgclassArray = [
     Status.bgclass.warning
 ];
 Status.icon = {};
-Status.icon[Status.status.none] = "";
-Status.icon[Status.status.error] = '';
-Status.icon[Status.status.info] = '';
-Status.icon[Status.status.processing] = '<div class="spinner-container"><div class="spinner-wheel"></div></div>';
-Status.icon[Status.status.success] = '';
-Status.icon[Status.status.warning] = '';
+Status.icon[Status.none] = "";
+Status.icon[Status.error] = '';
+Status.icon[Status.info] = '';
+Status.icon[Status.processing] = '<div class="spinner-container"><div class="spinner-wheel"></div></div>';
+Status.icon[Status.success] = '';
+Status.icon[Status.warning] = '';
 
 /**
  * Feedback Template
@@ -2186,17 +2200,17 @@ class FeedbackTemplate extends Template {
     /**
      * Constructor
      * @param {object} [options={}] 
-     * @param {string} [options.dom.icon=".status-feedback-icon"]
-     * @param {string} [options.dom.text=".status-feedback-text"]
-     * @param {string} [options.dom.closeBtn=".status-feedback-closeBtn"]
+     * @param {string} [options.dom.icon=".feedback-icon"]
+     * @param {string} [options.dom.text=".feedback-text"]
+     * @param {string} [options.dom.closeBtn=".feedback-closeBtn"]
      * @return {FeedbackTemplate}
      */
     constructor(options = {}){
         let defaults = {
             dom: {
-                icon: '.status-feedback-icon',
-                text: '.status-feedback-text',
-                closeBtn: '.status-feedback-closeBtn'
+                icon: '.feedback-icon',
+                text: '.feedback-text',
+                closeBtn: '.feedback-closeBtn'
             }
         };
         super(Object.extend(defaults, options));
@@ -2219,11 +2233,11 @@ class FeedbackTemplate extends Template {
      */
     createHtml(){
         this.innerHTML = `
-            <div class="status-feedback-icon">
+            <div class="feedback-icon">
                 OK!
             </div>
-            <div class="status-feedback-text"></div>
-            <button class="status-feedback-closeBtn btn-none">
+            <div class="feedback-text"></div>
+            <button class="feedback-closeBtn btn-none">
                 X
             </button>`.trim();
         return this;
@@ -2322,7 +2336,7 @@ class FeedbackTemplate extends Template {
      * @return {FeedbackTemplate}
      */
     renderError(message){
-        return this.render(Status.status.error, message, Status.icon[Status.status.error]);
+        return this.render(Status.error, message, Status.icon[Status.error]);
     }
 
     /**
@@ -2331,7 +2345,7 @@ class FeedbackTemplate extends Template {
      * @return {FeedbackTemplate}
      */
     renderInfo(message){
-        return this.render(Status.status.info, message, Status.icon[Status.status.error]);
+        return this.render(Status.info, message, Status.icon[Status.error]);
     }
 
     /**
@@ -2340,7 +2354,7 @@ class FeedbackTemplate extends Template {
      * @return {FeedbackTemplate}
      */
     renderProcessing(message){
-        return this.render(Status.status.processing, message, Status.icon[Status.status.processing]);
+        return this.render(Status.processing, message, Status.icon[Status.processing]);
     }
 
     /**
@@ -2349,7 +2363,7 @@ class FeedbackTemplate extends Template {
      * @return {FeedbackTemplate}
      */
     renderSuccess(message){
-        return this.render(Status.status.success, message, icon);
+        return this.render(Status.success, message, icon);
     }
 
     /**
@@ -2358,7 +2372,7 @@ class FeedbackTemplate extends Template {
      * @return {FeedbackTemplate}
      */
     renderWarning(message){
-        return this.render(Status.status.warning, message, Status.icon[Status.status.warning]);
+        return this.render(Status.warning, message, Status.icon[Status.warning]);
     }
 }
 customElements.define('template-feedback', FeedbackTemplate);
@@ -2388,7 +2402,7 @@ class StatusTextTemplate extends Template {
     connectedCallback(){
         super.connectedCallback();
         if(!this.hasAttribute('status')){
-            this.setAttribute('status', Status.status.none);
+            this.setAttribute('status', Status.none);
         }
         if(!this.hasAttribute('text')){
             this.setAttribute('text', '');
@@ -2476,7 +2490,7 @@ class StatusTextTemplate extends Template {
      * @return {StatusTextTemplate}
      */
     renderNone(text){
-        return this.render(Status.status.none, text);
+        return this.render(Status.none, text);
     }
 
     /**
@@ -2485,7 +2499,7 @@ class StatusTextTemplate extends Template {
      * @return {StatusTextTemplate}
      */
     renderError(text){
-        return this.render(Status.status.error, text);
+        return this.render(Status.error, text);
     }
 
     /**
@@ -2494,7 +2508,7 @@ class StatusTextTemplate extends Template {
      * @return {StatusTextTemplate}
      */
     renderSuccess(text){
-        return this.render(Status.status.success, text);
+        return this.render(Status.success, text);
     }
 
     /**
@@ -2503,7 +2517,7 @@ class StatusTextTemplate extends Template {
      * @return {StatusTextTemplate}
      */
     renderInfo(text){
-        return this.render(Status.status.info, text);
+        return this.render(Status.info, text);
     }
 
     /**
@@ -2512,7 +2526,7 @@ class StatusTextTemplate extends Template {
      * @return {StatusTextTemplate}
      */
     renderWarning(text){
-        return this.render(Status.status.warning, text);
+        return this.render(Status.warning, text);
     }
 }
 customElements.define('template-status-text', StatusTextTemplate);
