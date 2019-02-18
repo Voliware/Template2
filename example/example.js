@@ -2,7 +2,7 @@
 ////////// Table Examples //////////////
 ///////////////////////////////////////
 
-let tableData =  [
+let tableData1 =  [
     {
         id: 0,
         column1: "Some data 1",
@@ -22,13 +22,27 @@ let tableData =  [
         column3: "Last data 3",
     }
 ];
+let tableData2 = [
+    {
+        id: 0,
+        column1: "Some data 1",
+        column2: "More data 1",
+        column3: "Last data 1",
+    },
+    {
+        id: 1,
+        column1: "Some new data 2",
+        column2: "More new data 2",
+        column3: "Last new data 2",
+    }
+];
 
 // table captured from DOM
 let table1 = document.getElementById("tableExample");
-table1.render(tableData);
+table1.render(tableData1);
 
 // table that does not exist in DOM
-// must have columns defined to match the tableData
+// must have columns defined to match the tableData1
 let table2 = document.createElement('template-table');
 table2.setSchema({
     primaryKey: "id",
@@ -37,7 +51,10 @@ table2.setSchema({
     columnTitles: ["Column Uno", "Column Dos", "Column Tres"]
 });
 table2.appendTo(document.getElementById('tableExampleNoHtml'));
-table2.render(tableData);
+table2.render(tableData1);
+setTimeout(function(){
+    table2.render(tableData2);
+}, 1000);
 
 /////////////////////////////////////////
 ////////// Form Examples ///////////////
@@ -77,3 +94,35 @@ form1.setOptions({
     }
 })
 form1.render(formData);
+
+/////////////////////////////////////////
+////////// Popup Examples //////////////
+///////////////////////////////////////
+
+let popup = document.getElementById('popupExample');
+let popupButton = document.getElementById('popupExampleButton');
+popupButton.addEventListener('click', function(){
+    popup.open();
+});
+
+/////////////////////////////////////////
+////////// Status Examples /////////////
+///////////////////////////////////////
+
+let status1 = document.getElementById('statusExample1');
+status1.renderSuccess("You did it!");
+let status2 = document.getElementById('statusExample2');
+status2.renderError("You failed!");
+let status3 = document.getElementById('statusExample3');
+status3.renderInfo("You're doing it!");
+
+/////////////////////////////////////////
+////////// Feedack Examples ////////////
+///////////////////////////////////////
+
+let feedback1 = document.getElementById('feedbackExample1');
+feedback1.renderSuccess("You did it!");
+let feedback2 = document.getElementById('feedbackExample2');
+feedback2.renderError("You failed!");
+let feedback3 = document.getElementById('feedbackExample3');
+feedback3.renderProcessing("You're doing it!");

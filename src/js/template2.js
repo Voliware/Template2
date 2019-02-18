@@ -99,13 +99,13 @@
  * 
  * This library also comes with some predefined classes that
  * extend Template: FormTemplate, TableTemplate, FeedbackTemplate, 
- * PopupTemplate, and StatusTextTemplate. 
+ * PopupTemplate, and StatusTemplate. 
  * FormTemplate wraps a basic <form> element and provides some 
  * improved serialization and submission functionality. 
  * TableTemplate wraps a basic <table> element and  provides easy
  * ways to build tables.
  * PopupTemplate is a very simple popup or modal.
- * FeedbackTemplate and StatusTextTemplate are basic elements that 
+ * FeedbackTemplate and StatusTemplate are basic elements that 
  * provide an easy way to indicate the status of something, or to give
  * feedback on an action.
  */
@@ -431,9 +431,17 @@ class EventSystem  {
  * let userList = document.getElementById('userList');
  * let userElementManager = new ElementManager(userList, userTemplate);
  * userElementManager.render([
- *    {id:0, name: "Jim", status: "online"},
- *    {id:1, name: "Pam", status: "offline"},
- *    {id:2, name: "Michael", status: "online"},
+ *    {id:0, name: "Jim H", status: "online"},
+ *    {id:1, name: "Pam B", status: "offline"},
+ *    {id:2, name: "Michael S", status: "online"},
+ * ]);
+ * // ElementManager would update Jim and Pam, 
+ * // but, since Michael no longer exists in the data,
+ * // it would remove the element/template with that data.
+ * // What is important is that the "id" is matched.
+ * userElementManager.render([
+ *    {id:0, name: "Jim H", status: "online"},
+ *    {id:1, name: "Pam H", status: "online"},
  * ]);
  */
 class ElementManager extends EventSystem {
@@ -443,6 +451,9 @@ class ElementManager extends EventSystem {
      * @param {HTLMElement} wrapper - wrapper element where elements are appended
      * @param {HTMLElement} template - a cloneable HTMLElement or Template
      * @param {object} [options]
+     * @param {string} [options.primaryKey="id"] - necessary for rendering data from
+     *                  arrays of objects. Otherwise, ElementManager will just empty
+     *                  itself and rebuild from scratch.
      * @param {number} [options.maxElements=0] - max element count
      * @param {boolean} [options.cloneTemplate=true] - whether to clone the initial
      *                  template from the DOM. Most of the time, you want to do this.   
@@ -457,6 +468,7 @@ class ElementManager extends EventSystem {
     constructor(wrapper, template, options){
         super();
         let defaults = {
+            primaryKey: "id",
             maxElements: 0,
             cloneTemplate: true,
             removeTemplate: true,
@@ -465,8 +477,7 @@ class ElementManager extends EventSystem {
         this.options = Object.extend(defaults, options);
 
         /**
-         * The element in which all templates
-         * will be appended to.
+         * The element in which all templates will be appended to.
          * @type {HTMLElement}
          */
         this.wrapper = wrapper;
@@ -525,7 +536,7 @@ class ElementManager extends EventSystem {
         while (this.wrapper.firstChild) {
             this.wrapper.removeChild(this.wrapper.firstChild);
         }
-        this.elements = {};
+        this.elements = new Map();
         return this;
     }
 
@@ -702,11 +713,12 @@ class ElementManager extends EventSystem {
      */
     renderArray(data){
         for(let i = 0; i < data.length; i++){
-            if(typeof data[i].id === "undefined"){
-                console.error("ElementManager.renderArray: data must have an id property");
+            let id = data[i][this.options.primaryKey];
+            if(typeof id === "undefined"){
+                console.error("ElementManager.renderArray: data must have a primary key property");
                 return;
             }
-            this.renderElement(data[i].id, data[i], i);
+            this.renderElement(id, data[i], i);
         }
         return this;
     }
@@ -773,16 +785,16 @@ class ElementManager extends EventSystem {
         }
         
         if(element){
-            this.elements.set(id, element);
             if(isNew){
-                this.appendElement(element);
-                if(element instanceof Template){
-                    element.render(data);
-                }
-                else {
-                    Template.render(element, data);
-                }                
+                this.elements.set(id, element);
+                this.appendElement(element);              
             }
+            if(element instanceof Template){
+                element.render(data);
+            }
+            else {
+                Template.render(element, data);
+            }  
         }
 
         return this;
@@ -812,9 +824,8 @@ class ElementManager extends EventSystem {
  * by capturing them during initialization 
  * into the local "dom" object. Each child element
  * is captured by any desired element attribute and,
- * if named appropriately, can be populated with data via render().
+ * if named appropriately, can be rendered with data via render().
  * Provides a namespaced EventSystem with on/off handlers.
- * Has various animations, such as fadeIn and hide.
  * Has a render function that takes in an object of data and
  * populates child elements with same-named attributes.
  * @extends {HTMLElement}
@@ -824,12 +835,20 @@ class Template extends HTMLElement {
     /**
      * Constructor
      * @param {object} [options={}]
+     * @param {object} [options.dom={}] - a collection of element selectors
+     *                  to capture child elements of the Template
+     * @param {boolean} [options.createHtml=false] - whether to run the
+     *                  createHtml() function on connectedCallback(). 
+     *                  Note that it will also run if innerHTML is empty. 
+     * @param {string} [options.renderAttribute="data-name"] - the attribute of
+     *                  each child element to match data in render() with
+     * @param {boolean} [options.displayBlock=true] - whether to add the 
+     *                  'template-block' class to the template on connectedCallback()
      * @return {Template}
      */
     constructor(options = {}){
         super();
         let defaults = {
-            html: "",
             dom: {},
             createHtml: false,
             renderAttribute: 'data-name',
@@ -1054,15 +1073,15 @@ class Template extends HTMLElement {
     }
 
     /**
-     * Hide an element by adding the hidden class
+     * Hide an element 
      * @param {HTMLElemet} element 
      */
     static hide(element){
-        element.classList.add('hidden');
+        element.style.display = "none";
     }
 
     /**
-     * Hide the Template by adding the hidden class
+     * Hide the Template
      * @return {Template}
      */
     hide(){
@@ -1071,15 +1090,15 @@ class Template extends HTMLElement {
     }
 
     /**
-     * Show an element by removing the hidden class
+     * Show an element 
      * @param {HTMLElemet} element 
      */
     static show(element){
-        element.classList.remove('hidden');
+        element.style.display = "block";
     }
 
     /**
-     * Show the Template by removing the hidden class
+     * Show the Template 
      * @return {Template}
      */
     show(){
@@ -1716,7 +1735,6 @@ class TableTemplate extends Template {
      * @param {object} [options={}] 
      * @param {boolean} [options.alwaysRebuild=false] - whether to always wipe
      * and then rebuild the table
-     * @param {string} [options.primaryKey="id"] - the tables primary key
      * @param {string[]} [options.columns=[]] - array of column names, required for a
      * table that is not defined first in HTML
      * @param {string[]} [options.columnTitles=[]] - array of column titles, optional if
@@ -1733,7 +1751,6 @@ class TableTemplate extends Template {
     constructor(options = {}){
         let defaults = {
             alwaysRebuild: false,
-            primaryKey: 'id',
             columns: [],
             columnTitles: [],
             dom: {
@@ -2010,41 +2027,53 @@ class PopupTemplate extends Template {
      * @param {object} options 
      * @param {string} [options.size="medium"]
      * @param {boolean} [options.showHeader=true]
-     * @param {boolean} [options.showCloseBtn=true]
+     * @param {boolean} [options.showClose=true]
      * @param {boolean} [options.showFooter=true]
      * @param {object} [options.dom]
-     * @param {string} [options.dom.header=".template-popup-header"]
-     * @param {string} [options.dom.title=".template-popup-title"]
-     * @param {string} [options.dom.closeBtn=".template-popupcloseBtn"]
-     * @param {string} [options.dom.body=".template-popup-body"]
-     * @param {string} [options.dom.footer=".template-popup-footer"]
+     * @param {string} [options.dom.header=".popup-header"]
+     * @param {string} [options.dom.title=".popup-title"]
+     * @param {string} [options.dom.close=".template-popupcloseBtn"]
+     * @param {string} [options.dom.body=".popup-body"]
+     * @param {string} [options.dom.footer=".popup-footer"]
      * @return {PopupTemplate}
      */
     constructor(options = {}){
         let defaults = {
+            displayBlock: false,
             size: 'medium',
             showHeader: true,
-            showCloseBtn: true,
+            showClose: true,
             showFooter: true,
             dom: {
-                header: '.template-popup-header',
-                title: '.template-popup-title',
-                closeBtn: '.template-popup-closeBtn',
-                body: '.template-popup-body',
-                footer: '.template-popup-footer'
+                header: '.popup-header',
+                title: '.popup-title',
+                close: '.popup-close',
+                body: '.popup-body',
+                footer: '.popup-footer'
             }
         }
         super(Object.extend(defaults, options));
+        return this;
+    }
+
+    /**
+     * Connected callback
+     */
+    connectedCallback(){
+        super.connectedCallback();
         this.applyOptions(this.options);
-        
-        // handlers
+        this.attachButtonHandlers();
+    }
+
+    /**
+     * Attach button handlers
+     * @return {PopupTemplate}
+     */
+    attachButtonHandlers(){
         let self = this;
-        this.dom.closeBtn.addEventListener('click', function(e){
+        this.dom.close.addEventListener('click', function(e){
             self.close();
         });
-
-        this.appendTo(document.body);
-
         return this;
     }
 
@@ -2054,15 +2083,15 @@ class PopupTemplate extends Template {
      */
     createHtml(){
         this.innerHTML = `
-            <div class="template-popup-content">
-                <div class="template-popup-header">
-                    <div class="template-popup-title"></div>
-                    <button type="button" class="btn-none template-popup-closeBtn">
+            <div class="popup-content">
+                <div class="popup-header">
+                    <div class="popup-title"></div>
+                    <button type="button" class="btn-none popup-close">
                         X
                     </button>
                 </div>
-                <div class="template-popup-body"></div>
-                <div class="template-popup-footer"></div>
+                <div class="popup-body"></div>
+                <div class="popup-footer"></div>
             </div>`.trim();
         return this;
     }
@@ -2073,13 +2102,13 @@ class PopupTemplate extends Template {
      * @return {PopupTemplate}
      */
     applyOptions(options){
-        if(!options.showHeader){
+        if(!options.showHeader && this.dom.header){
             this.dom.header.remove();
         }
-        if(!options.showCloseBtn){
-            this.dom.closeBtn.remove();
+        if(!options.showClose && this.dom.close){
+            this.dom.close.remove();
         }
-        if(!options.showFooter){
+        if(!options.showFooter && this.dom.footer){
             this.dom.footer.remove();
         }
         return this;
@@ -2092,7 +2121,7 @@ class PopupTemplate extends Template {
      */
     open(){
         document.body.classList.add('popup-open');
-        this.show().fadeIn();
+        this.show();
         return this;
     }
 
@@ -2103,11 +2132,7 @@ class PopupTemplate extends Template {
      */
     close(){
         document.body.classList.remove('popup-open');
-        this.fadeOut();
-        let self = this;
-        setTimeout(function(){
-            self.hide();
-        }, 1000);
+        this.hide();
         return this;
     }
 
@@ -2202,7 +2227,7 @@ class FeedbackTemplate extends Template {
      * @param {object} [options={}] 
      * @param {string} [options.dom.icon=".feedback-icon"]
      * @param {string} [options.dom.text=".feedback-text"]
-     * @param {string} [options.dom.closeBtn=".feedback-closeBtn"]
+     * @param {string} [options.dom.close=".feedback-close"]
      * @return {FeedbackTemplate}
      */
     constructor(options = {}){
@@ -2210,20 +2235,30 @@ class FeedbackTemplate extends Template {
             dom: {
                 icon: '.feedback-icon',
                 text: '.feedback-text',
-                closeBtn: '.feedback-closeBtn'
+                close: '.feedback-close'
             }
         };
         super(Object.extend(defaults, options));
+        return this;
+    }
+
+    /**
+     * Connected callback
+     */
+    connectedCallback(){
+        super.connectedCallback();
+        this.attachButtonHandlers();
+    }
+
+    /**
+     * Attach button handlers
+     * @return {FeedbackTemplate}
+     */
+    attachButtonHandlers(){
         let self = this;
-        this.dom.closeBtn.addEventListener('click', function(){
+        this.dom.close.addEventListener('click', function(){
             self.remove();
         });
-
-        // if built with new
-        if(status && status !== ""){
-            this.render(status, text, icon);
-        }
-
         return this;
     }
 
@@ -2237,7 +2272,7 @@ class FeedbackTemplate extends Template {
                 OK!
             </div>
             <div class="feedback-text"></div>
-            <button class="feedback-closeBtn btn-none">
+            <button class="feedback-close">
                 X
             </button>`.trim();
         return this;
@@ -2363,7 +2398,7 @@ class FeedbackTemplate extends Template {
      * @return {FeedbackTemplate}
      */
     renderSuccess(message){
-        return this.render(Status.success, message, icon);
+        return this.render(Status.success, message, Status.icon[Status.success]);
     }
 
     /**
@@ -2381,13 +2416,13 @@ customElements.define('template-feedback', FeedbackTemplate);
  * StatusText Template
  * @extends {Template}
  */
-class StatusTextTemplate extends Template {
+class StatusTemplate extends Template {
     static get observedAttributes() {return ['status', 'text']; }
 
     /**
      * Constructor
      * @param {object} [options={}]
-     * @return {StatusTextTemplate}
+     * @return {StatusTemplate}
      */
     constructor(options){
         super(options);
@@ -2397,7 +2432,7 @@ class StatusTextTemplate extends Template {
     /**
      * Adds a "status" and "text" attribute
      * to the element if they do not exist.
-     * @return {StatusTextTemplate}
+     * @return {StatusTemplate}
      */
     connectedCallback(){
         super.connectedCallback();
@@ -2437,7 +2472,7 @@ class StatusTextTemplate extends Template {
     /**
      * Set the status
      * @param {string} status 
-     * @return {StatusTextTemplate}
+     * @return {StatusTemplate}
      */
     setStatus(status){
         this.setAttribute('status', status);
@@ -2446,7 +2481,7 @@ class StatusTextTemplate extends Template {
 
     /**
      * Remove all status- classes
-     * @return {StatusTextTemplate}
+     * @return {StatusTemplate}
      */
     clearStatusClass(){
         this.classList.remove(...Status.classArray);
@@ -2456,7 +2491,7 @@ class StatusTextTemplate extends Template {
     /**
      * Set the class
      * @param {string} clazz 
-     * @return {StatusTextTemplate}
+     * @return {StatusTemplate}
      */
     setClass(clazz){
         this.clearStatusClass();
@@ -2467,7 +2502,7 @@ class StatusTextTemplate extends Template {
     /**
      * Set the text
      * @param {string} text 
-     * @return {StatusTextTemplate}
+     * @return {StatusTemplate}
      */
     setText(text){
         this.textContent = text;
@@ -2475,58 +2510,58 @@ class StatusTextTemplate extends Template {
     }
 
     /**
-     * Render the StatusTextTemplate
+     * Render the StatusTemplate
      * @param {string} status 
      * @param {string} text 
-     * @return {StatusTextTemplate}
+     * @return {StatusTemplate}
      */
     render(status, text){
         return this.setStatus(status).setText(text);
     }
 
     /**
-     * Render the StatusTextTemplate with no status
+     * Render the StatusTemplate with no status
      * @param {string} text 
-     * @return {StatusTextTemplate}
+     * @return {StatusTemplate}
      */
     renderNone(text){
         return this.render(Status.none, text);
     }
 
     /**
-     * Render the StatusTextTemplate with error status
+     * Render the StatusTemplate with error status
      * @param {string} text 
-     * @return {StatusTextTemplate}
+     * @return {StatusTemplate}
      */
     renderError(text){
         return this.render(Status.error, text);
     }
 
     /**
-     * Render the StatusTextTemplate with success status
+     * Render the StatusTemplate with success status
      * @param {string} text 
-     * @return {StatusTextTemplate}
+     * @return {StatusTemplate}
      */
     renderSuccess(text){
         return this.render(Status.success, text);
     }
 
     /**
-     * Render the StatusTextTemplate with info status
+     * Render the StatusTemplate with info status
      * @param {string} text 
-     * @return {StatusTextTemplate}
+     * @return {StatusTemplate}
      */
     renderInfo(text){
         return this.render(Status.info, text);
     }
 
     /**
-     * Render the StatusTextTemplate with warning status
+     * Render the StatusTemplate with warning status
      * @param {string} text 
-     * @return {StatusTextTemplate}
+     * @return {StatusTemplate}
      */
     renderWarning(text){
         return this.render(Status.warning, text);
     }
 }
-customElements.define('template-status-text', StatusTextTemplate);
+customElements.define('template-status', StatusTemplate);
