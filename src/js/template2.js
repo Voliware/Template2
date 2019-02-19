@@ -243,6 +243,42 @@ document.getElementByDataName = function(dataName){
 };
 
 /**
+ * Generates a unique id based on the 
+ * timestamp and an internal counter.
+ */
+class IdGenerator {
+
+    /**
+     * Constructor
+     * @return {IdGenerator}
+     */
+    constructor(){
+        this.counter = 0;
+        this.lastTime = 0;
+        return this;
+    }
+
+    /**
+     * Generates a unique id based on the timestamp,
+     * a prefix, and an internal counter.
+     * @return {string}
+     */
+    generateId(){
+        let now = microtime.now();
+        // if an ID is being generated with the same timestamp as the
+        // last request to generate an ID, then increment the counter 
+        if(this.lastTime === now){
+            this.counter++;
+        }
+        else {
+            this.counter = 0;
+        }
+        this.lastTime = now;
+        return `${now}${this.counter}`;
+    }
+}
+
+/**
  * An event system identical to jQuery's with namespace handling.
  * @example
  * let es = new EventSystem();
@@ -822,7 +858,7 @@ class ElementManager extends EventSystem {
  * An enhanced HTMLElement.
  * Has more control over its child elements
  * by capturing them during initialization 
- * into the local "dom" object. Each child element
+ * into the local "elements" object. Each child element
  * is captured by any desired element attribute and,
  * if named appropriately, can be rendered with data via render().
  * Provides a namespaced EventSystem with on/off handlers.
@@ -835,7 +871,7 @@ class Template extends HTMLElement {
     /**
      * Constructor
      * @param {object} [options={}]
-     * @param {object} [options.dom={}] - a collection of element selectors
+     * @param {object} [options.elements={}] - a collection of element selectors
      *                  to capture child elements of the Template
      * @param {boolean} [options.createHtml=false] - whether to run the
      *                  createHtml() function on connectedCallback(). 
@@ -849,13 +885,14 @@ class Template extends HTMLElement {
     constructor(options = {}){
         super();
         let defaults = {
-            dom: {},
+            elements: {},
             createHtml: false,
             renderAttribute: 'data-name',
             displayBlock: true
         };
         this.options = Object.extend(defaults, options);
         this.eventSystem = new EventSystem();
+        this.elements = {};
         this.cachedData = {};
         this.renderData = {};
         return this;
@@ -871,7 +908,7 @@ class Template extends HTMLElement {
         if(this.options.createHtml || this.innerHTML === ""){
             this.createHtml();
         }
-        this.dom = this.extractDom();
+        this.findElements(this.options.elements);
         // by default, templates have no display
         if(this.options.displayBlock){
             this.classList.add('template-block');
@@ -880,6 +917,7 @@ class Template extends HTMLElement {
             this.setAttributes(this.htmlTemplate.attributes);
         }
     }
+
 
     /**
      * Add an event handler. If this is a native
@@ -977,22 +1015,75 @@ class Template extends HTMLElement {
     }
 
     /**
-     * Run through the defined dom object in options
-     * and try to find each defined element. If found,
-     * add the element to an object and return it.
+     * Find and register elements into the elements object.
      * @return {object}
      */
-    extractDom(){
-        let dom = {};
-        if(this.options.dom){
-            for(let k in this.options.dom){
-                dom[k] = this.querySelector(this.options.dom[k]);
-            }
-        }        
-        return dom;
+    findElements(elements){
+        for(let k in elements){
+            this.elements[k] = this.querySelector(elements[k]);
+        }
+        return this.elements;
     }
         
     // tree
+
+    /**
+     * Find the first matching child element of another element.
+     * @param {HTMLElement} element - HTMLElement to search through
+     * @param {string} selector - any valid css selector
+     * @return {HTMLElement|undefined}
+     */
+    static find(element, selector){
+        return element.querySelectorAll(selector)[0];
+    }
+
+    /**
+     * Find the first matching child element of another element.
+     * @param {string} selector - any valid css selector
+     * @return {HTMLElement|undefined}
+     */
+    find(selector){
+        return Template.find(this, selector);
+    }
+
+    /**
+     * Find all matching child elements of another element.
+     * @param {HTMLElement} element - HTMLElement to search through
+     * @param {string} selector - any valid css selector
+     * @return {HTMLElement|undefined}
+     */
+    static findAll(element, selector){
+        return element.querySelectorAll(selector);
+    }
+
+    /**
+     * Find all matching child elements of another element.
+     * @param {string} selector - any valid css selector
+     * @return {HTMLElement|undefined}
+     */
+    findAll(selector){
+        return Template.findAll(this, selector);
+    }
+
+    /**
+     * Find the last matching child element of another element.
+     * @param {HTMLElement} element - HTMLElement to search through
+     * @param {string} selector - any valid css selector
+     * @return {HTMLElement|undefined}
+     */
+    static findLast(element, selector){
+        let el = element.querySelectorAll(selector);
+        return el[el.length - 1];
+    }
+
+    /**
+     * Find the last matching child element of another element.
+     * @param {string} selector - any valid css selector
+     * @return {HTMLElement|undefined}
+     */
+    findLast(selector){
+        return Template.findLast(selector);
+    }
 
     /**
      * Append one element to another element
@@ -1000,8 +1091,18 @@ class Template extends HTMLElement {
      * @param {HTMLElement} toElement - the element to append to
      * @return {Template}
      */
-    static appendTo(element, toElement){
+    static append(element, toElement){
         toElement.appendChild(element);
+    }
+
+    /**
+     * Append an element 
+     * @param {HTMLElement} element 
+     * @return {Template}
+     */
+    append(element){
+        Template.append(element, this);
+        return this;
     }
 
     /**
@@ -1010,7 +1111,7 @@ class Template extends HTMLElement {
      * @return {Template}
      */
     appendTo(element){
-        Template.appendTo(this, element);
+        Template.append(this, element);
         return this;
     }
 
@@ -1019,8 +1120,18 @@ class Template extends HTMLElement {
      * @param {HTMLElement} element - the element to prepend
      * @param {HTMLElement} toElement - the element to prepend to
      */
-    static prependTo(element, toElement){
+    static prepend(element, toElement){
         toElement.insertBefore(element, toElement.firstChild);
+    }
+
+    /**
+     * Prepend another element
+     * @param {HTMLElement} element 
+     * @return {Template}
+     */
+    prepend(element){
+        Template.prepend(element, this);
+        return this;
     }
 
     /**
@@ -1029,7 +1140,7 @@ class Template extends HTMLElement {
      * @return {Template}
      */
     prependTo(element){
-        Template.prependTo(this, element);
+        Template.prepend(this, element);
         return this;
     }
 
@@ -1376,6 +1487,7 @@ class Template extends HTMLElement {
      * @param {HTMLElement} htmlElement 
      * @param {object} data 
      * @example
+     * // fill a div with data
      * let myDiv = document.getElementById('myDiv');
      * Template.render(myDiv, {name: "Bob", status: "online"});
      * // <div id="myDiv">
@@ -1383,6 +1495,7 @@ class Template extends HTMLElement {
      * //    <span data-name="status">online</span>
      * // </div>
      * @example
+     * // fill a form with data
      * let myForm = document.getElementById('myForm');
      * myForm.options = myForm.options || {};
      * myForm.options.renderAttribute = "name";
@@ -1450,7 +1563,12 @@ class Template extends HTMLElement {
         return this;
     }
 }
-customElements.define('template-custom', Template);
+Template.__global__ = {
+    es: new EventSystem(),
+    idg: new IdGenerator(),
+    events: {}
+};
+customElements.define('template-element', Template);
 
 /**
  * Form Template
@@ -1469,10 +1587,10 @@ class FormTemplate extends Template {
      * @param {string[]} [options.excludedFields=['disalbed']]
      * @param {boolean} [options.useTemplate=true]
      * @param {string} [options.renderAttribute]
-     * @param {object} [options.dom]
-     * @param {string} [options.dom.form]
-     * @param {string} [options.dom.resetButton]
-     * @param {string} [options.dom.submitButton]
+     * @param {object} [options.elements]
+     * @param {string} [options.elements.form]
+     * @param {string} [options.elements.resetButton]
+     * @param {string} [options.elements.submitButton]
      * @return {FormTemplate}
      */
     constructor(options = {}){
@@ -1485,7 +1603,7 @@ class FormTemplate extends Template {
             excludedFields: ['disabled'],
             useTemplate: true,
             renderAttribute: 'name',
-            dom: {
+            elements: {
                 form: 'form',
                 submitButton: 'button[type="submit"]',
                 resetButton: 'button[type="reset"]'
@@ -1525,11 +1643,11 @@ class FormTemplate extends Template {
      */
     attachFormHandlers(){
         let self = this;
-        this.dom.form.addEventListener('submit', function(event){
+        this.elements.form.addEventListener('submit', function(event){
             event.preventDefault();
             self.submit();
         });
-        this.dom.form.addEventListener('reset', function(event){
+        this.elements.form.addEventListener('reset', function(event){
             if(!Object.isEmpty(self.cachedData)){
                 event.preventDefault();
                 self.reload();
@@ -1739,13 +1857,13 @@ class TableTemplate extends Template {
      * table that is not defined first in HTML
      * @param {string[]} [options.columnTitles=[]] - array of column titles, optional if
      * you want the header to display a different title for each column instead of its name
-     * @param {object} [options.dom] - the table elements
-     * @param {string} [options.dom.table="table"] - the table element selector
-     * @param {string} [options.dom.thead="thead"] - the thead element selector
-     * @param {string} [options.dom.theadTr="theadTr"] - the thead row element selector
-     * @param {string} [options.dom.tbody="tbody"] - the thead element selector
-     * @param {string} [options.dom.tfoot="tfoot"] - the tfoot element selector
-     * @param {string} [options.dom.tr="tr"] - the tbody row element selector
+     * @param {object} [options.elements] - the table elements
+     * @param {string} [options.elements.table="table"] - the table element selector
+     * @param {string} [options.elements.thead="thead"] - the thead element selector
+     * @param {string} [options.elements.theadTr="theadTr"] - the thead row element selector
+     * @param {string} [options.elements.tbody="tbody"] - the thead element selector
+     * @param {string} [options.elements.tfoot="tfoot"] - the tfoot element selector
+     * @param {string} [options.elements.tr="tr"] - the tbody row element selector
      * @return {TableTemplate}
      */
     constructor(options = {}){
@@ -1753,7 +1871,7 @@ class TableTemplate extends Template {
             alwaysRebuild: false,
             columns: [],
             columnTitles: [],
-            dom: {
+            elements: {
                 table: 'table',
                 thead: 'thead',
                 theadTr: 'thead > tr',
@@ -1774,10 +1892,10 @@ class TableTemplate extends Template {
      */
     connectedCallback(){
         super.connectedCallback();
-        if(this.dom && this.dom.tr instanceof HTMLElement){
-            this.columnCount = this.dom.tr.querySelectorAll('td').length;
+        if(this.elements && this.elements.tr instanceof HTMLElement){
+            this.columnCount = this.elements.tr.querySelectorAll('td').length;
             // remove the default row, it will be used as a template
-            this.dom.tr.remove();
+            this.elements.tr.remove();
         }
         this.createRowManager();
     }
@@ -1790,10 +1908,10 @@ class TableTemplate extends Template {
      * @return {ElementManager}
      */
     createRowManager(){
-        let wrapper = (this.dom && this.dom.tbody instanceof HTMLElement)
-            ? this.dom.tbody
+        let wrapper = (this.elements && this.elements.tbody instanceof HTMLElement)
+            ? this.elements.tbody
             : document.createElement('div');
-        return this.rowManager = new ElementManager(wrapper, this.dom.tr);
+        return this.rowManager = new ElementManager(wrapper, this.elements.tr);
     }
 
     /**
@@ -1866,7 +1984,7 @@ class TableTemplate extends Template {
      * @return {TableTemplate}
      */
     addHeader(header){
-        Template.prependTo(header, this.dom.table);
+        Template.prepend(header, this.elements.table);
         return this;
     }
 
@@ -1879,15 +1997,15 @@ class TableTemplate extends Template {
      * @return {TableTemplate}
      */
     generateHeader(columnNames, columnTitles){
-        this.dom.thead = this.createHeader();
+        this.elements.thead = this.createHeader();
         let row = this.createRow();
         for(let i = 0; i < columnNames.length; i++){
             let col = this.createHeaderColumn();
             col.innerHTML = columnTitles ? columnTitles[i] : columnNames[i];
             row.appendChild(col);
         }
-        this.dom.thead.appendChild(row);
-        this.addHeader(this.dom.thead);
+        this.elements.thead.appendChild(row);
+        this.addHeader(this.elements.thead);
         return this;
     }
 
@@ -1906,7 +2024,7 @@ class TableTemplate extends Template {
      * @return {HTMLElement}
      */
     cloneRow(){
-        return this.dom.tr.cloneNode(true);
+        return this.elements.tr.cloneNode(true);
     }
 
     /**
@@ -1915,7 +2033,7 @@ class TableTemplate extends Template {
      * @return {TableTemplate}
      */
     appendRow(row){
-        this.dom.tbody.appendChild(row);
+        this.elements.tbody.appendChild(row);
         return this;
     }
 
@@ -1937,13 +2055,13 @@ class TableTemplate extends Template {
      * @return {TableTemplate}
      */
     generateRow(){
-        this.dom.tr = this.createRow();
+        this.elements.tr = this.createRow();
         for(let i = 0; i < this.options.columns.length; i++){
             let col = this.createColumn();
             col.setAttribute("data-name", this.options.columns[i]);
-            this.dom.tr.appendChild(col);
+            this.elements.tr.appendChild(col);
         }
-        this.dom.tbody.appendChild(this.dom.tr);
+        this.elements.tbody.appendChild(this.elements.tr);
         return this;
     }
 
@@ -1976,15 +2094,15 @@ class TableTemplate extends Template {
      * @return {TableTemplate}
      */
     resetDom(){
-        if(this.dom){
-            for(let k in this.dom){
-                let el = this.dom[k];
+        if(this.elements){
+            for(let k in this.elements){
+                let el = this.elements[k];
                 if(el instanceof HTMLElement){
                     el.remove();
                 }
             }
         }
-        this.dom = {};
+        this.elements = {};
         return this;
     }
 
@@ -2008,7 +2126,7 @@ class TableTemplate extends Template {
         }
         this.resetDom();
         this.createHtml();
-        this.dom = this.extractDom();
+        this.findElements(this.options.elements);
         this.generateHeader(this.options.columns, this.options.columnTitles);
         this.generateRow();
         return this;
@@ -2029,12 +2147,12 @@ class PopupTemplate extends Template {
      * @param {boolean} [options.showHeader=true]
      * @param {boolean} [options.showClose=true]
      * @param {boolean} [options.showFooter=true]
-     * @param {object} [options.dom]
-     * @param {string} [options.dom.header=".popup-header"]
-     * @param {string} [options.dom.title=".popup-title"]
-     * @param {string} [options.dom.close=".template-popupcloseBtn"]
-     * @param {string} [options.dom.body=".popup-body"]
-     * @param {string} [options.dom.footer=".popup-footer"]
+     * @param {object} [options.elements]
+     * @param {string} [options.elements.header=".popup-header"]
+     * @param {string} [options.elements.title=".popup-title"]
+     * @param {string} [options.elements.close=".template-popupcloseBtn"]
+     * @param {string} [options.elements.body=".popup-body"]
+     * @param {string} [options.elements.footer=".popup-footer"]
      * @return {PopupTemplate}
      */
     constructor(options = {}){
@@ -2044,7 +2162,7 @@ class PopupTemplate extends Template {
             showHeader: true,
             showClose: true,
             showFooter: true,
-            dom: {
+            elements: {
                 header: '.popup-header',
                 title: '.popup-title',
                 close: '.popup-close',
@@ -2071,7 +2189,7 @@ class PopupTemplate extends Template {
      */
     attachButtonHandlers(){
         let self = this;
-        this.dom.close.addEventListener('click', function(e){
+        this.elements.close.addEventListener('click', function(e){
             self.close();
         });
         return this;
@@ -2102,14 +2220,14 @@ class PopupTemplate extends Template {
      * @return {PopupTemplate}
      */
     applyOptions(options){
-        if(!options.showHeader && this.dom.header){
-            this.dom.header.remove();
+        if(!options.showHeader && this.elements.header){
+            this.elements.header.remove();
         }
-        if(!options.showClose && this.dom.close){
-            this.dom.close.remove();
+        if(!options.showClose && this.elements.close){
+            this.elements.close.remove();
         }
-        if(!options.showFooter && this.dom.footer){
-            this.dom.footer.remove();
+        if(!options.showFooter && this.elements.footer){
+            this.elements.footer.remove();
         }
         return this;
     }
@@ -2142,7 +2260,7 @@ class PopupTemplate extends Template {
      * @return {PopupTemplate}
      */
     renderTitle(html){
-        this.dom.title.innerHTML = html;
+        this.elements.title.innerHTML = html;
         return this;
     }
 
@@ -2152,7 +2270,7 @@ class PopupTemplate extends Template {
      * @return {PopupTemplate}
      */
     renderBody(html){
-        this.dom.body.innerHTML = html;
+        this.elements.body.innerHTML = html;
         return this;
     }
 
@@ -2162,7 +2280,7 @@ class PopupTemplate extends Template {
      * @return {PopupTemplate}
      */
     renderFooter(html){
-        this.dom.footer.innerHTML = html;
+        this.elements.footer.innerHTML = html;
         return this;
     }
 }
@@ -2225,14 +2343,14 @@ class FeedbackTemplate extends Template {
     /**
      * Constructor
      * @param {object} [options={}] 
-     * @param {string} [options.dom.icon=".feedback-icon"]
-     * @param {string} [options.dom.text=".feedback-text"]
-     * @param {string} [options.dom.close=".feedback-close"]
+     * @param {string} [options.elements.icon=".feedback-icon"]
+     * @param {string} [options.elements.text=".feedback-text"]
+     * @param {string} [options.elements.close=".feedback-close"]
      * @return {FeedbackTemplate}
      */
     constructor(options = {}){
         let defaults = {
-            dom: {
+            elements: {
                 icon: '.feedback-icon',
                 text: '.feedback-text',
                 close: '.feedback-close'
@@ -2256,7 +2374,7 @@ class FeedbackTemplate extends Template {
      */
     attachButtonHandlers(){
         let self = this;
-        this.dom.close.addEventListener('click', function(){
+        this.elements.close.addEventListener('click', function(){
             self.remove();
         });
         return this;
@@ -2340,7 +2458,7 @@ class FeedbackTemplate extends Template {
      * @return {FeedbackTemplate}     
      */
     setText(text){
-        this.dom.text.textContent = text;
+        this.elements.text.textContent = text;
         return this;
     }
 
@@ -2350,7 +2468,7 @@ class FeedbackTemplate extends Template {
      * @return {FeedbackTemplate}     
      */
     setIcon(icon){
-        this.dom.icon.innerHTML = icon;
+        this.elements.icon.innerHTML = icon;
         return this;
     }
 

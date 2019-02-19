@@ -12,7 +12,7 @@ html {
     display:none;
 }
 .hidden{
-    display:none !important;
+    display:none;
 }
 /* block */
 .block {
