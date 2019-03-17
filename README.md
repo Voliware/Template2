@@ -8,7 +8,7 @@ Rendering HTML has become complex. Heavy APIs are required to create basic web p
 The Template library goes back to the roots of web development. Create HTML in your HTML files, and control the HTML in your Javascript files. Template is both a static and inheritable class that extends the native `HTMLElement`. It provides some basic DOM manipulation, such as `appendTo()` and `hide()`, and a `render()` function that updates the DOM from data. Template is desgined around using the HTML5 feature Custom Elements. If you already know native Javascript, you already know most of Template.
 
 ### Custom Elements
-[Custom Elements](https://tinyurl.com/y7vqn4df) lets you create a custom HTML element such as `<user-element>`. This lets you add functions and properties to the element and all instances of it. A `<form>` can be thought of as a custom element, because it has more features than a regular `<div>`. 
+[Custom Elements](https://tinyurl.com/y7vqn4df) is a native HTML5 feature that lets you create a custom HTML element such as `<user-element>`. This lets you add functions and properties to the element and all instances of it. A `<form>` can be thought of as a custom element, because it has more features than a regular `<div>`. 
 
 You add functionality to a custom element in your Javascript code by extending the `HTMLElement` (or any of its child classes) and then registering it with the `customElements` global object.
 
