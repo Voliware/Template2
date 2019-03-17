@@ -1,14 +1,14 @@
 # Template2
-Template2 is a tiny client-side library for rendering HTML and providing DOM manipulation functions.
+Template2 is a tiny client-side library for rendering and manipulating HTML. It also provides support for forms, tables, and popups.
 
 ## The Problem
-The simple task of rendering HTML has become overly complex. APIs must be studied and new systems must be learned. Logic has found its way into HTML pages, and HTML has found itself in Javascript files. 
+Rendering HTML has become complex. Heavy APIs are required to create basic web pages. Logic has found its way into HTML pages, and HTML has found itself in Javascript files. 
 
 ## The Solution
-The Template library brings client-side web development forwards by enhancing the native HTMLElement. It provides some basic DOM manipulation and a `render()` function that updates the DOM from data. Template is desgined around using the HTML5 feature Custom Elements. 
+The Template library goes back to the roots of web development. Create HTML in your HTML files, and control the HTML in your Javascript files. Template is both a static and inheritable class that extends the native `HTMLElement`. It provides some basic DOM manipulation, such as `appendTo()` and `hide()`, and a `render()` function that updates the DOM from data. Template is desgined around using the HTML5 feature Custom Elements. If you already know native Javascript, you already know most of Template.
 
 ### Custom Elements
-[Custom Elements](https://tinyurl.com/y7vqn4df) let you define a custom HTML element. This lets you add functions and properties to a custom  HTMLElement. A `<form>` can be thought of as a custom element. The Custom Elements system can let you define any new HTML element such as `<user-element>`, which could provide some new methods to display user information. 
+[Custom Elements](https://tinyurl.com/y7vqn4df) lets you create a custom HTML element such as `<user-element>`. This lets you add functions and properties to the element and all instances of it. A `<form>` can be thought of as a custom element, because it has more features than a regular `<div>`. 
 
 You add functionality to a custom element in your Javascript code by extending the `HTMLElement` (or any of its child classes) and then registering it with the `customElements` global object.
 
@@ -40,10 +40,7 @@ Then you can call your custom functions
 
 ```js
 let user = document.getElementById('user');
-App.getUserStatus()
-   .then(function(data){
-       user.renderOnlineStatus(data.status);
-   });
+user.renderOnlineStatus("online");
 ```
 
 This is the most natural way to add new functionality to HTML elements.
@@ -63,8 +60,13 @@ Any custom element that extends Template, or any `<template-element>` element th
 - `render()`
 
 ### How to Use It
+There are three ways to make use of the Template library.
+1. Creating a `<template-element>` element 
+2. Using the static functions from the `Template` class
+3. Creating your own custom element and extending the `Template` class
+
 #### Create a Template Element
-You can add a `<template-element>` to your HTML at any point. It will have all regular HTMLElement functions and properties, plus the above new methods. For example
+You can add a `<template-element>` to your HTML at any point. It will have all regular HTMLElement functions and properties, plus the above new methods. For example, suppose you wanted to create a counter element:
 
 ```html
 <template-element id="counter">
@@ -75,14 +77,16 @@ You can add a `<template-element>` to your HTML at any point. It will have all r
 ```
 
 ```js
-// a counter that warns you if it goes past 5
+// find the element
 let counter = document.getElementById('counter');
+
+// optionally find all child elements for easy access
 counter.findElements({
    input: "input",
    button: "#countButton"
 });
 
-// add an event handler to the input element
+// add an event handler to the child input element
 counter.on(counter.elements.input, 'input', function(){
    if(this.value > 5){
       counter.addClass("warning");
@@ -94,7 +98,7 @@ counter.on(counter.elements.button, 'click', function(){
    counter.elements.input.value++;
 });
 
-// set the input to 0 and set some feedback
+// render the element using the [data-name=""] attributes as the keys
 counter.render({count:0, feedback: "Don't increment past 5!"});
 ```
 
