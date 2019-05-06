@@ -1,16 +1,107 @@
 # Template2
-Template2 is a tiny client-side library for rendering HTML and providing DOM manipulation functions.
+Template2 is a tiny client-side library for rendering and manipulating HTML. The Template class is both extendable and statically available. It also provides a namespaced Event System.
 
 ## The Problem
-The simple task of rendering HTML has become overly complex. APIs must be studied and new systems must be learned. Logic has found its way into HTML pages, and HTML has found itself in Javascript files. 
+Generating and controlling HTML has become cumbersome. Simple web pages and applications are overburdened with complex APIs and massive libraries. Logic has found its way into HTML pages, and HTML has found itself in Javascript files. 
 
 ## The Solution
-The Template library brings client-side web development forwards by enhancing the native HTMLElement. It provides some basic DOM manipulation and a `render()` function that updates the DOM from data. Template is desgined around using the HTML5 feature Custom Elements. 
+The Template library goes back to the roots of web development. Create HTML in your HTML files, and control the HTML in your Javascript files. Template is both a static and inheritable class that extends the native `HTMLElement`. It provides some basic DOM manipulation, such as `appendTo()`, `addClass()`, and `hide()`. It also features a simple `render()` function that updates HTML elements from an object of data. Template is desgined around using the HTML5 feature Custom Elements. Template's API is inspired by `jQuery`.
+
+## Examples
+There are three main ways to make use of the Template library.
+1. Using the static functions from the `Template` class
+2. Creating a `<template-element>` element 
+3. Creating your own custom element and extending the `Template` class
+
+### 1. Static Functions
+As a simple demonstration, you can use either the static Template functions to control regular HTML elements:
+```js
+let popup = document.getElementById("popup");
+Template.hide(popup);
+```
+
+### Render an Element
+You can "render" any element in your HTML with the Template.render() function. Note that "render" means add inner HTML or set value attributes of any type of HTMLElement.
+
+**HTML**
+```html
+<form id="userform">
+    <input name="name" type="text">
+    <select name="city">
+        <option value="0">Toronto</option>
+        <option value="1">Ottawa</option>
+        <option value="2">Montreal</option>
+    </select>
+</form>
+```
+
+**Javascript**
+```js
+let data = {name: "Tester", city: 0};
+let form = document.getElementById("userform");
+Template.render(form, data);
+```
+render() can populate forms, fill up tables, or just set some inner html if the element is not an input type.
+
+### 2. Create a Template Element
+You can create a basic Template element that will have all of the Template features. You can actually wrap any HTML elements within a Template element to enhance it. 
+
+**HTML**
+
+Create an element in an HTML file that will display the name of a user, their current status, and allow them to logout.
+```html
+<template-element id="user">
+    <div data-name="username"></div>
+    <div data-name="status"></div>
+    <button name="logout" type="button">Logout</button>
+</template-element>
+```
+
+**Javascript**
+
+Control the element in a Javascript file. Note how no "upgrading" or logical wrapping of the element needs to occur. Because it is a `<template-element>` it will already have all Template functions.
+```js
+// render the user element
+let data = {username: "Billy", status: "Online"};
+let user = document.getElementById("user");
+user.render(data);
+
+// attach handlers
+user.elements.logout.on("click", function(){
+   App.logout();
+});
+```
+
+It's evident from the above example that Template uses a special attribute, `data-name`, to find elements to render. Template can also render elements with a `name` attribute - the only reason `data-name` is used is because `name` is not valid for most HTMLElements. Another apparent feature from above is Templates ability to provide all elements with `name` or `data-name` elements in a convenient `elements` property. As seen in the above example, the `<button>` is accessible via `user.elements.logout`. It registered this element because it had a `name` or `data-name` property. Note that you can register elements without these two attributes if you create a custom Template element.
+
+*Advanced Note: Template does not waste time by "finding" each element on each render(). As soon as the element is connected to the DOM, all elements are found and cached. New elements are found via a Mutation Observer.*
+
+### Extend the Template Class
+Even more powerful is the ability to extend the Template class and create your own Custom Element.
+
+## How Does it Work?
+Template builds on the powerful HTML5 Custom Elements API.
+
+### The Template Class
+Template is a class that extends the native HTMLElement class. HTMLElement is the basic class for all HTML elements - `<div>`, `<h1>`, `<button>`, etc. `HTMLElement` provides the functions and properties you already know: `style`, `remove()`, `addEventListener()`, and so on. Template then adds more functionality - such as `addClass()` and `appendTo()`. It also adds a namespaced `EventSystem`, and a trivial way to render the entire element.
+
+#### New Methods
+Any custom element that extends Template, or any `<template-element>` element that you add in your HTML, gains the following functions
+
+- `on()`, `one()`, `off()`, and `emit()`
+- `append()`, `appendTo()`, `prepend()`, `prependTo()`, and `empty()`
+- `isVisible()`, `hide()`, `show()`, and `toggle()`
+- `getStyle()`, `setHeight()` and `setWidth()`
+- `addClass()`, `removeClass()`, `toggleClass()`, `hasClass()`, and `replaceClass()`
+- `enable()` and `disable()`
+- `render()`
 
 ### Custom Elements
-[Custom Elements](https://tinyurl.com/y7vqn4df) let you define a custom HTML element. This lets you add functions and properties to a custom  HTMLElement. A `<form>` can be thought of as a custom element. The Custom Elements system can let you define any new HTML element such as `<user-element>`, which could provide some new methods to display user information. 
+[Custom Elements](https://tinyurl.com/y7vqn4df) is a native HTML5 feature that lets you create a custom HTML element such as `<user-element>`. This lets you add functions and properties to the element and all instances of it. A `<form>` can be thought of as a custom element, because it has more functions than a regular `<div>`, such as `reset()` and `submit()`.
 
 You add functionality to a custom element in your Javascript code by extending the `HTMLElement` (or any of its child classes) and then registering it with the `customElements` global object.
+
+#### Quick Lesson
 
 ```js
 class UserElement extends HTMLElement {
@@ -40,74 +131,7 @@ Then you can call your custom functions
 
 ```js
 let user = document.getElementById('user');
-App.getUserStatus()
-   .then(function(data){
-       user.renderOnlineStatus(data.status);
-   });
+user.renderOnlineStatus("online");
 ```
 
 This is the most natural way to add new functionality to HTML elements.
-
-## The Template Class
-Template is a class that extends the native HTMLElement class. HTMLElement is the basic class for all HTML elements - `<div>`, `<h1>`, `<button>`, etc. `HTMLElement` provides the functions and properties you already know: `style`, `remove()`, `addEventListener()`, and so on. Template then adds more functionality - such as `addClass()` and `appendTo()`. It also adds a namespaced `EventSystem`, and a trivial way to render the entire element.
-
-### New Methods
-Any custom element that extends Template, or any `<template-element>` element that you add in your HTML, gains the following functions
-
-- `on()`, `one()`, `off()`, and `emit()`
-- `append()`, `appendTo()`, `prepend()`, `prependTo()`, and `empty()`
-- `isVisible()`, `hide()`, `show()`, and `toggle()`
-- `getStyle()`, `setHeight()` and `setWidth()`
-- `addClass()`, `removeClass()`, `toggleClass()`, `hasClass()`, and `replaceClass()`
-- `enable()` and `disable()`
-- `render()`
-
-### How to Use It
-#### Create a Template Element
-You can add a `<template-element>` to your HTML at any point. It will have all regular HTMLElement functions and properties, plus the above new methods. For example
-
-```html
-<template-element id="counter">
-    <div data-name="feedback"></div>
-    <input data-name="count">
-    <button id="countButton" type="button">Click!</button>
-</template-element>
-```
-
-```js
-// a counter that warns you if it goes past 5
-let counter = document.getElementById('counter');
-counter.findElements({
-   input: "input",
-   button: "#countButton"
-});
-
-// add an event handler to the input element
-counter.on(counter.elements.input, 'input', function(){
-   if(this.value > 5){
-      counter.addClass("warning");
-   }
-});
-
-// add an event handler to the button element
-counter.on(counter.elements.button, 'click', function(){
-   counter.elements.input.value++;
-});
-
-// set the input to 0 and set some feedback
-counter.render({count:0, feedback: "Don't increment past 5!"});
-```
-
-#### Use Static Methods
-All of the above methods are available statically from the `Template` class. Every method takes any HTMLElement, meaning all Template functions work on plain old HTMLElements. No wrapping or upgrading required.
-
-```js
-// get the basic <form> element from the HTML page
-let myForm = document.getElementById("myForm"); 
-// hide and disable the form
-Template.hide(myForm);
-Template.disable(myForm);
-```
-
-#### Extend Template
-If you need your own custom element, you can extend the Template class to inherit all of the above methods.
