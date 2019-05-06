@@ -25,6 +25,13 @@ html {
 .form-group-radio input{
     display:none;
 }
+/* pager */
+.pager-input{
+    display:inline-block;
+}
+.pager-page{
+    width:40px;
+}
 /* popup */
 template-popup{
     background:rgba(0, 0, 0, 0.75);

@@ -1,113 +1,8 @@
-/*
- * Template v2.0.0
+/**
+ * Template v2.0.1
+ * https://github.com/Voliware/Template2
  * By Anthony Agostino - anthagostino|at|gmail[dot]com
  * GPL 3.0 license
- * 
- * Template is a front-end library used to render and
- * create re-useable HTMLElements. It relies on the 
- * Custom Elements system. Custom elements are a way to 
- * define new HTMLElements with your own behaviours. 
- * For example, you can define a custom HTMLElement in 
- * your HTML page like so. 
- * 
- * <!-- html -->
- * <my-element>
- *    <div class="popup">
- *        <div class="message"></div>
- *    </div>
- * </my-element>
- * 
- * // js
- * class MyElement extends HTMLElement {
- *     connectedCallback(){
- *         this.innerHTML = "Some text";
- *         this.addHandlers();
- *     }
- *     addHandlers(){
- *         this.addEventListner('click', function(){
- *             console.log("clicked!");
- *         });
- *     }
- * }
- * // this line hooks up the element to your class
- * customElements.define('my-element', MyElement);
- * 
- * Suggested, but not necessary reading: https://tinyurl.com/y7vqn4df.
- * 
- * Template is built on the notion that your HTML stays in your .html 
- * files, and your javascript and logic stays in your .js files.
- * Template is extremely simple, and is not like learning a new
- * language or system like the complex render systems of today.
- * If you know the basics of vanilla JS in the browser, Template
- * is really just a wrapper for that, in many ways like jQuery is.
- * The difference is that Template has no animation system
- * (suggested library is anime.js) and uses much simpler code.
- * This version of Template is also built to use all of the latest
- * browser APIs and ES6. There is absolutely no guarentee of 
- * supporting older browsers.
- * 
- * Template comes with many static functions, such as 
- * Template.show(element), Template.addClass(element, className),
- * and so on. These static functions are just vanilla JS wrappers.
- * That means that Template does not need to convert the entire
- * element to a super-element of some sort. It performs the action
- * in the fastest way possible. All static Template functions are
- * also available as object functions when you create an actual 
- * Template element, such as myTemplate.addClass('hidden').
- * 
- * The Template class itself extends HTMLElement. It provides
- * methods to render the entire contents of the HTMLElement
- * with one function and one object of data, render(). Data is 
- * matched to HTMLElements based on some HTML attribute, typically 
- * "data-name". Template also provides a few common HTML 
- * and CSS manipulating methods like setting attributes.
- * Any time you extend the Template class to create your own
- * custom element, you simply extend Template, and at the bottom
- * of the class definition, register it with customElements.
- * 
- * class MyElement extends Template { 
- *     connectedCallback(){
- *         this.hide();
- *     }
- * }
- * customElements.define('my-element', MyElement);
- * 
- * Template does not use the shadow dom. It is preferred that
- * DOM is accessible, especially to make developer's lives easy.
- * 
- * Template also wraps up a custom EventSystem, which perfectly mimics
- * jQuery's namespace-style events. That is, events can be namespaced
- * such as .on("click.dropdown") or further .on("click.dropdown.ev").
- * This EventSystem can also be used standalone.
- * 
- * The Template library also has a ElementManager, which, when
- * given an array of objects, map of objects, or object of objects,
- * automagically creates, updates (renders), or destroys HTMLElements.
- * This can be used to easily generate a table of rows, where each
- * row is built off of the same Template that ElementManager
- * knows about. Of course, ElementManager can also render Templates. 
- * This can be much more powerful because, when rendering, the 
- * Template's render() function will be called. 
- * Otherwise, if it is just an HTMLElement, the static method
- * Template.render(element, data) will be callled.
- * 
- * Template and ElementManager both have the notion of 
- * preserving data and processing data. When either are
- * fed data to render(), the data is always cached as-is in an 
- * object called cachedData, and then processed into an object
- * called renderData. That ensures that your data is never mutated.
- * 
- * This library also comes with some predefined classes that
- * extend Template: FormTemplate, TableTemplate, FeedbackTemplate, 
- * PopupTemplate, and StatusTemplate. 
- * FormTemplate wraps a basic <form> element and provides some 
- * improved serialization and submission functionality. 
- * TableTemplate wraps a basic <table> element and  provides easy
- * ways to build tables.
- * PopupTemplate is a very simple popup or modal.
- * FeedbackTemplate and StatusTemplate are basic elements that 
- * provide an easy way to indicate the status of something, or to give
- * feedback on an action.
  */
 
  // helpers
@@ -141,6 +36,9 @@ Object.isEmpty = function(obj){
 /**
  * Extends an object into another
  * @return {object}
+ * @example
+ * let o = Object.extend({}, {a:1}, {a:2, b:3});
+ * console.log(o); // {a:2, b:3};
  */
 Object.extend = function(){
     for(let i = 1; i < arguments.length; i++) {
@@ -275,182 +173,6 @@ class IdGenerator {
         }
         this.lastTime = now;
         return `${now}${this.counter}`;
-    }
-}
-
-/**
- * An event system identical to jQuery's with namespace handling.
- * @example
- * let es = new EventSystem();
- * es.on('click', function(){
- *     console.log("click!");
- * });
- * es.on('click.you', function(){
- *     console.log("click you!")
- * });
- * es.emit("click"); // click! click you!
- * es.off("click.you");
- * es.emit("click"); // click!
- */
-class EventSystem  {
-
-    /**
-     * Constructor
-     * @return {EventSystem}
-     */
-    constructor(){
-        this.events = {};
-        return this;
-    }
-
-    /**
-     * Get the number of handlers for an event.
-     * Will look through all namespaced events as well.
-     * @param {string} event 
-     * @return {number}
-     */
-    getHandlersCount(event){
-        let eventObject = this.events[event];
-        if(!eventObject){
-            return 0;
-        }
-
-        let count = 0;
-        countHandlers(eventObject);
-        return count;
-
-        /**
-         * Recursively count all handlers
-         * @param {object} obj 
-         */
-        function countHandlers(obj){
-            for(let k in obj){
-                if(k === "_handlers"){
-                    count += obj[k].length;
-                }
-                else if(typeof obj[k] === 'object') {
-                    countHandlers(obj[k])
-                }
-            }
-        }
-    }
-
-    /**
-     * Attach an event.
-     * Supports namespace handling.
-     * @param {string} event - an event such as click, or click.foo.bar
-     * @param {function} callback - a function to run when the event is emitted
-     * @return {EventSystem}
-     */
-    on(event, callback) {
-        let eventArray = event.split('.');
-  
-        let lastObject = this.events;
-        for (let i = 0; i < eventArray.length; i++) {
-            let currentEventNamespace = eventArray[i];
-            if (!lastObject[currentEventNamespace]) {
-                lastObject[currentEventNamespace] = {};
-            }
-            if (i === eventArray.length - 1) {
-                if (!Array.isArray(lastObject[currentEventNamespace]._handlers)) {
-                    lastObject[currentEventNamespace]._handlers = [];
-                }
-                lastObject[currentEventNamespace]._handlers.push(callback);
-            } 
-            else {
-                lastObject = lastObject[currentEventNamespace];
-            }
-        }
-        return this;
-    }
-
-    /**
-     * Attach and event that only runs once.
-     * @param {string} event - an event such as click, or click.foo.bar
-     * @param {function} callback - a function to run when the event is emitted
-     * @return {EventSystem}
-     */
-    one(event, callback) {
-        let self = this;
-        let newEventName = event + "." + String.random(8);
-        let newCallback = function(data) {
-            callback(data);
-            self.off(newEventName);
-        }
-        this.on(newEventName, newCallback);
-        return this;
-    }
-  
-    /**
-     * Remove an event.
-     * If removeAllChildren is set to true, it will also remove any namespaced handlers.
-     * @param {string} event - an event such as click, or click.foo.bar
-     * @param {boolean} [removeAllChildHandlers=true] - whether to remove all child events
-     * @return {EventSystem}
-     */
-    off(event, removeAllChildHandlers = true) {
-        let eventArray = event.split('.');
-
-        let lastObject = this.events;
-        for (let i = 0; i < eventArray.length; i++) {
-            let currentEventNamespace = eventArray[i];
-            if (i === eventArray.length - 1) {
-                if (removeAllChildHandlers) {
-                    delete lastObject[currentEventNamespace];
-                } else {
-                    delete lastObject[currentEventNamespace]._handlers;
-                    if (Object.keys(lastObject[currentEventNamespace]).length === 0) {
-                        delete lastObject[currentEventNamespace];
-                    }
-                }
-            } else {
-                lastObject = lastObject[currentEventNamespace];
-            }
-        }
-
-        // todo: add a cleanup method to remove empty parents
-
-        return this;
-    }
-
-    /**
-     * Emit an event.
-     * This will emit all namespaced child events.
-     * @param {string} event - an event such as click, or click.foo.bar
-     * @param {*} data - data to pass along with the event
-     * @return {EventSystem}
-     */
-    emit(event, data) {
-        let eventArray = event.split('.');
-
-        let lastObject = this.events;
-        for (let i = 0; i < eventArray.length; i++) {
-            let currentEventNamespace = eventArray[i];
-			lastObject = lastObject[currentEventNamespace];
-            if (i === eventArray.length - 1) {
-                _emit(lastObject, data);
-            } 
-        }
-
-        /**
-         * Recursively emit event handlers 
-         * through the handler tree.
-         * @param {object} obj 
-         * @param {*} data 
-         */
-        function _emit(obj, data) {
-            for (let k in obj) {
-                if (k === "_handlers") {
-                    for (let x = 0; x < obj[k].length; x++) {
-                        obj[k][x](data);
-                    }
-                } else {
-                    _emit(obj[k], data);
-                }
-            }
-        }
-
-        return this;
     }
 }
   
@@ -873,9 +595,6 @@ class Template extends HTMLElement {
      * @param {object} [options={}]
      * @param {object} [options.elements={}] - a collection of element selectors
      *                  to capture child elements of the Template
-     * @param {boolean} [options.createHtml=false] - whether to run the
-     *                  createHtml() function on connectedCallback(). 
-     *                  Note that it will also run if innerHTML is empty. 
      * @param {string} [options.renderAttribute="data-name"] - the attribute of
      *                  each child element to match data in render() with
      * @param {boolean} [options.displayBlock=true] - whether to add the 
@@ -886,7 +605,6 @@ class Template extends HTMLElement {
         super();
         let defaults = {
             elements: {},
-            createHtml: false,
             renderAttribute: 'data-name',
             displayBlock: true
         };
@@ -895,7 +613,25 @@ class Template extends HTMLElement {
         this.elements = {};
         this.cachedData = {};
         this.renderData = {};
+        this.isFirstRender = true;
+        this.observer = new MutationObserver(this.mutationObserverCallback.bind(this));
         return this;
+    }
+
+    /**
+     * 
+     * @param {} mutations 
+     * @param {*} observer 
+     */
+    mutationObserverCallback(mutations, observer){
+        mutations.forEach((mutation) => {
+            switch(mutation.type) {
+                case 'childList':
+                case 'subtree':
+                    console.log('mutated');
+                    return;
+            }
+        });
     }
 
     /**
@@ -905,19 +641,100 @@ class Template extends HTMLElement {
      * can be modified. That cannot happen in the constructor.
      */
     connectedCallback(){
-        if(this.options.createHtml || this.innerHTML === ""){
-            this.createHtml();
-        }
+        this.findNamedElements();
         this.findElements(this.options.elements);
         // by default, templates have no display
         if(this.options.displayBlock){
             this.classList.add('template-block');
         }
-        if(this.htmlTemplate){
-            this.setAttributes(this.htmlTemplate.attributes);
+    }
+
+    /**
+     * Add an event handler an elements event system.
+     * @param {HTMLElement} element 
+     * @param {string} event 
+     * @param {function} callback
+     * @example
+     * Template.on(form, "submit", SubmitFunction);
+     * @example
+     * Template.on(form, "reset.tab1", ResetTab1Function);
+     */
+    static on(element, event, callback){
+        let baseEvent = event.split('.')[0];
+
+        // if it doesn't have one, create an event system for this element
+        if(!(element.eventSystem instanceof EventSystem)){
+            element.eventSystem = new EventSystem();
+        }
+
+        // add all base events, ie the "click" in "click.namespace",
+        // to the elements native event listener. If the event does 
+        // not actually exist natively, it will simply not fire.
+        if(element.eventSystem.getHandlersCount(baseEvent) === 0){
+            element.addEventListener(baseEvent, function(e){
+                element.eventSystem.emit(baseEvent, e);
+            });
+        }
+
+        element.eventSystem.on(event, callback);
+    }
+
+    /**
+     * Add an event handler an elements event system
+     * that after emitting once, is removed.
+     * @param {HTMLElement} element 
+     * @param {string} event 
+     * @param {function} callback
+     * @example
+     * Template.one(form, "submit", SubmitFunction);
+     * @example
+     * Template.one(form, "reset.tab1", ResetTab1Function);
+     */
+    static one(element, event, callback){
+        let baseEvent = event.split('.')[0];
+
+        if(!(element.eventSystem instanceof EventSystem)){
+            element.eventSystem = new EventSystem();
+        }
+
+        if(this.eventSystem.getHandlersCount(baseEvent) === 0){
+            this.addEventListener(baseEvent, function(e){
+                self.emit(baseEvent, e);
+                self.removeEventListener(baseEvent, callback);
+            });
+        }
+
+        this.eventSystem.one(event, callback);
+    }
+
+    /**
+     * Remove an event. Also removes it from the native event system.
+     * If removeAllChildren is set to true, it will also remove any namespaced handlers.
+     * @param {HTMLElement} element 
+     * @param {string} event - an event such as click, or click.foo.bar
+     * @param {boolean} [removeAllChildHandlers=true] - whether to remove all child events
+     * @return {Template}
+     */
+    static off(element, event, removeAllChildHandlers = true){
+        let baseEvent = event.split('.')[0];
+        this.eventSystem.off(event, removeAllChildHandlers);
+        if(this.eventSystem.getHandlersCount(baseEvent) > 0){
+            this.removeEventListener(baseEvent);
         }
     }
 
+    /**
+     * Emit an event.
+     * @param {HTMLElement} element 
+     * @param {string} event - an event such as click, or click.foo.bar
+     * @param {*} data - data to pass along with the event
+     * @return {EventSystem}
+     */
+    static emit(element, event, data){
+        if(element.eventSystem instanceof EventSystem){
+            element.eventSystem.emit(event, data);
+        }
+    }
 
     /**
      * Add an event handler. If this is a native
@@ -928,18 +745,7 @@ class Template extends HTMLElement {
      * @return {Template}
      */
     on(event, callback) {
-        let self = this;
-        let baseEvent = event.split('.')[0];
-
-        // always add to native DOM event handler
-        // if it doesn't exist it is harmless
-        if(this.eventSystem.getHandlersCount(baseEvent) === 0){
-            this.addEventListener(baseEvent, function(e){
-                self.emit(baseEvent, e);
-            });
-        }
-
-        this.eventSystem.on(event, callback);
+        Template.on(this, event, callback);
         return this;
     }
 
@@ -950,19 +756,7 @@ class Template extends HTMLElement {
      * @return {Template}
      */
     one(event, callback) {
-        let self = this;
-        let baseEvent = event.split('.')[0];
-
-        // always add to native DOM event handler
-        // if it doesn't exist it is harmless
-        if(this.eventSystem.getHandlersCount(baseEvent) === 0){
-            this.addEventListener(baseEvent, function(e){
-                self.emit(baseEvent, e);
-                self.removeEventListener(baseEvent, callback);
-            });
-        }
-
-        this.eventSystem.one(event, callback);
+        Template.one(this, event, callback);
         return this;
     }
   
@@ -974,11 +768,7 @@ class Template extends HTMLElement {
      * @return {Template}
      */
     off(event, removeAllChildHandlers = true) {
-        let baseEvent = event.split('.')[0];
-        this.eventSystem.off(event, removeAllChildHandlers);
-        if(this.eventSystem.getHandlersCount(event) > 0){
-            this.removeEventListener(baseEvent);
-        }
+        Template.off(this, event, removeAllChildHandlers);
         return this;
     }
 
@@ -989,15 +779,7 @@ class Template extends HTMLElement {
      * @return {EventSystem}
      */
     emit(event, data){
-        this.eventSystem.emit(event, data);
-        return this;
-    }
-    
-    /**
-     * Construct some HTML.
-     * @return {Template}
-     */
-    createHtml(){
+        Template.emit(this, event, data);
         return this;
     }
 
@@ -1013,6 +795,8 @@ class Template extends HTMLElement {
         }
         return this;
     }
+        
+    // tree
 
     /**
      * Find and register elements into the elements object.
@@ -1024,8 +808,44 @@ class Template extends HTMLElement {
         }
         return this.elements;
     }
-        
-    // tree
+
+    /**
+     * Find all elements that have name or data-name attributes.
+     * @param {HTMLElement} element - HTMLElement to search through
+     * @return {object}
+     */
+    static findNamedElements(element){
+        let elements = {};
+        let found = element.querySelectorAll('[name], [data-name]');
+        for(let i = 0; i < found.length; i++){
+            let name = found[i].getAttribute('name');
+            if(!name){
+                name = found[i].getAttribute('data-name');
+            }
+            if(name){
+                elements[name] = found[i];
+            }
+        }
+        return elements;
+    }
+
+    /**
+     * Find all elements that have name or data-name attributes.
+     * @return {Template}
+     */
+    findNamedElements(){
+        let elements = Template.findNamedElements(this);
+        Object.extend(this.elements, elements);
+        return this;
+    }
+
+    /**
+     * Get registered child elements of the Template.
+     * @return {object}
+     */
+    getElements(){
+        return this.elements;
+    }
 
     /**
      * Find the first matching child element of another element.
@@ -1188,6 +1008,9 @@ class Template extends HTMLElement {
      * @param {HTMLElemet} element 
      */
     static hide(element){
+        if(element.style.display !== "none"){
+            element.previousDisplay = element.style.display;
+        }
         element.style.display = "none";
     }
 
@@ -1205,7 +1028,7 @@ class Template extends HTMLElement {
      * @param {HTMLElemet} element 
      */
     static show(element){
-        element.style.display = "block";
+        element.style.display = element.previousDisplay || "block";
     }
 
     /**
@@ -1223,7 +1046,7 @@ class Template extends HTMLElement {
      * @param {HTMLElement} element 
      * @param {boolean} state 
      */
-    static toggle(element, state){
+    static display(element, state){
         if(typeof state === "undefined"){
             state = !Template.isVisible(element);
         }
@@ -1236,8 +1059,8 @@ class Template extends HTMLElement {
      * @param {boolean} state 
      * @return {Template}
      */
-    toggle(state){
-        Template.toggle(this, state);
+    display(state){
+        Template.display(this, state);
         return this;
     }
 
@@ -1407,6 +1230,25 @@ class Template extends HTMLElement {
         return this;
     }
 
+    // value
+
+    static getValue(element){
+        return element.value;
+    }
+
+    getValue(){
+        return Template.getValue(this);
+    }
+
+    static setValue(element, value){
+        element.value = value;
+    }
+
+    setValue(value){
+        Template.setValue(this, value);
+        return this;
+    }
+
     // enable/disable
 
     /**
@@ -1466,42 +1308,30 @@ class Template extends HTMLElement {
     }
 
     /**
-     * Render an element from an object of data.
-     * This only renders (sets values, sets text, etc) elements
-     * that are children of the element. 
-     * If the element has any inputs or selects, this will set their
-     * values in the most appropriate manner.
-     * Otherwise, the element must have child elements who have
-     * [data-name] attributes set. Each element with a 
-     * [data-name] attribute will have its input value
-     * or its innerHTML set to the data found in the data object.
-     * This data is found by matching the value of the [data-name]
-     * attribute to the key of a value in the object.
-     * If the HTMLElement is a Template, the render() function
-     * will be called instead.
-     * If the element has an options.renderAttribute set, then render()
-     * can use that value instead of the [data-name]. For example,
-     * if htmlElement.options.renderAttribute="name", then instead of 
-     * looking for an element's [data-name] attribute, it will look for
-     * its [name] attribute.
-     * @param {HTMLElement} htmlElement 
-     * @param {object} data 
+     * Render all child elements of an element using an object of data.
+     * In this case, render means set an input value, or set the 
+     * innerhtml of a basic HTMLElement, or call the render() function
+     * if the element has one, as it would for a Tempalte element.
+     * If htmlElement is not a Template element, all elements with a 
+     * [name] or [data-name] attribute whose value matches a key name 
+     * in the data object will have their value or HTML set accordingly.
+     * @param {HTMLElement} element - the element - which should have 1 or more 
+     *                      child elements - to render. Otherwise, nothing happens.
+     * @param {object} data - the data to render with. This object should have 
+     *                      keys that would match [name] or [data-name] element attributes.
+     * @param {boolean} [isTemplate=false] - whether the htmlElement is a Template
+     *                      or not. If it is, renders using the elements already 
+     *                      registered within the Template object - for speed.
      * @example
      * // fill a div with data
-     * let myDiv = document.getElementById('myDiv');
-     * Template.render(myDiv, {name: "Bob", status: "online"});
      * // <div id="myDiv">
      * //    <span data-name="name">Bob</span>
      * //    <span data-name="status">online</span>
      * // </div>
+     * let myDiv = document.getElementById('myDiv');
+     * Template.render(myDiv, {name: "Bob", status: "online"});
      * @example
      * // fill a form with data
-     * let myForm = document.getElementById('myForm');
-     * myForm.options = myForm.options || {};
-     * myForm.options.renderAttribute = "name";
-     * Template.render(myForm, {name: "Bob", status: "online"});
-     * // the input value will be "Bob"
-     * // the select value will be "online"
      * // <form id="myForm">
      * //     <input name="name" type="text">
      * //     <select name="status">
@@ -1509,43 +1339,52 @@ class Template extends HTMLElement {
      * //         <option value="online">Online</option>
      * //     </select>
      * // </form>
+     * let myForm = document.getElementById('myForm');
+     * Template.render(myForm, {name: "Bob", status: "online"});
      */
-    static render(htmlElement, data){
-        let renderAttribute = htmlElement.options && htmlElement.options.renderAttribute 
-            ? htmlElement.options.renderAttribute 
-            : 'data-name';
+    static render(element, data, isTemplate = false){
+        // if this is a Template, get the already registered child elements
+        let elements = null;
+        if(isTemplate){
+            elements = element.getElements();
+        }
+        // otherwise, find all child elements with name or data-name attributes
+        else {
+            elements = Template.findNamedElements(element);
+        } 
 
         let _data = Object.flatten(data);
         for(let k in _data){
             let value = _data[k];
-            let elements = htmlElement.querySelectorAll(`[${renderAttribute}="${k}"]`);
-            for(let i = 0; i < elements.length; i++){
-                let element = elements[i];
-                if(element instanceof Template){
-                    element.render(value);
-                }
-                else if(element instanceof HTMLInputElement){
-                    let type = element.getAttribute('type');
-                    if(type === 'checkbox'){
-                        if(value){
-                            element.checked = true;
-                        }
+            let element = elements[k];
+            if(!element){
+                continue;
+            }
+            
+            if(element.render){
+                element.render(value);
+                continue;
+            }
+            
+            if(element.tagName === "INPUT"){
+                let type = element.getAttribute('type');
+                if(type){
+                    if(type === 'checkbox' && value){
+                        element.checked = true;
                     }
-                    else if(type === 'radio'){
-                        if(element.getAttribute('value') === value){
-                            element.checked = true;
-                        }
+                    else if(type === 'radio' && element.getAttribute('value') === value){
+                        element.checked = true;
                     }
                     else {
                         element.value = value;
                     }
                 }
-                else if (element instanceof HTMLSelectElement){
-                    element.value = value;
-                }
-                else {
-                    elements[i].innerHTML = value;
-                }
+            }
+            else if (element.tagName === "SELECT"){
+                element.value = value;
+            }
+            else {
+                element.innerHTML = value;
             }
         }
     }
@@ -1559,732 +1398,17 @@ class Template extends HTMLElement {
     render(data){
         this.cacheData(data);
         this.processRenderData(Object.extend({}, data));
-        Template.render(this, this.renderData);
+        this.observer.observe(this, {
+            childList: true,
+            subtree: true
+        });
+        Template.render(this, this.renderData, true);
+        this.observer.disconnect();
+        this.isFirstRender = false;
         return this;
     }
 }
-Template.__global__ = {
-    es: new EventSystem(),
-    idg: new IdGenerator(),
-    events: {}
-};
 customElements.define('template-element', Template);
-
-/**
- * Form Template
- * @extends {Template}
- */
-class FormTemplate extends Template {
-
-    /**
-     * Constructor
-     * @param {object} [options] 
-     * @param {function} [options.getRequest]
-     * @param {function} [options.submitRequest]
-     * @param {function} [options.validateRequest]
-     * @param {number} [options.checkboxMode]
-     * @param {number} [options.serializeMode]
-     * @param {string[]} [options.excludedFields=['disalbed']]
-     * @param {boolean} [options.useTemplate=true]
-     * @param {string} [options.renderAttribute]
-     * @param {object} [options.elements]
-     * @param {string} [options.elements.form]
-     * @param {string} [options.elements.resetButton]
-     * @param {string} [options.elements.submitButton]
-     * @return {FormTemplate}
-     */
-    constructor(options = {}){
-        let defaults = {
-            getRequest: null,
-            submitRequest: null,
-            validateRequest: null,
-			checkboxMode: FormTemplate.checkboxMode.number,
-            serializeMode: FormTemplate.serializeMode.toObject,
-            excludedFields: ['disabled'],
-            useTemplate: true,
-            renderAttribute: 'name',
-            elements: {
-                form: 'form',
-                submitButton: 'button[type="submit"]',
-                resetButton: 'button[type="reset"]'
-            }
-        };
-        super(Object.extend(defaults, options));
-        this.serializedData = {};
-        this.formattedSerializedData = null;
-        return this;
-    }
-
-    /**
-     * Connected callback
-     */
-    connectedCallback(){
-        super.connectedCallback();
-        this.attachFormHandlers();
-    }
-        
-    /**
-     * Set form options
-     * @param {object} options 
-     * @return {Form}
-     */
-    setOptions(options){
-        for(let k in options){
-            if(this.options.hasOwnProperty(k)){
-                this.options[k] = options[k];
-            }
-        }
-        return this;
-    }
-
-    /**
-     * Attach handlers to the default form events.
-     * @return {FormTemplate}
-     */
-    attachFormHandlers(){
-        let self = this;
-        this.elements.form.addEventListener('submit', function(event){
-            event.preventDefault();
-            self.submit();
-        });
-        this.elements.form.addEventListener('reset', function(event){
-            if(!Object.isEmpty(self.cachedData)){
-                event.preventDefault();
-                self.reload();
-            }
-        });
-        return this;
-    }
-
-    reload(){
-        
-    }
-
-    /**
-     * Convert a checkbox into a boolean,
-     * string, or number.
-     * @param {HTMLElement} checkbox 
-     * @param {number} mode 
-     * @return {boolean|string|number}
-     */
-    convertCheckbox(checkbox, mode){
-		let checked = checkbox.checked
-		switch(mode){
-			case FormTemplate.checkboxMode.boolean:
-                return checked;
-			case FormTemplate.checkboxMode.string:
-				return checked ? '1' : '0';
-			case FormTemplate.checkboxMode.onOff:
-				return checked ? 'on' : 'off';
-            default:
-            case FormTemplate.checkboxMode.number:
-                return checked ? 1 : 0;
-		}
-    }
-    
-    /**
-     * Determine if a field is not excluded
-     * @param {string} field 
-     * @return {FormTemplate}
-     */
-    isNotExcluded(field){
-        for(let i = 0; i < this.options.excludedFields.length; i++){
-            let attribute = this.options.excludedFields[i];
-            if(attribute === "disabled"){
-                if(field.hasAttribute("disabled")){
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Serialize the form 
-     * @return {object}
-     */
-    serialize(){
-        this.serializedData = {};
-        
-        let inputs = Array.from(this.getElementsByTagName('input'));
-        let selects = Array.from(this.getElementsByTagName('select'));
-        let textareas = Array.from(this.getElementsByTagName('textarea'));
-        let all = inputs.concat(selects, textareas);
-        for (let i = 0; i < all.length; i++) {
-            if(this.isNotExcluded(all[i])){
-                this.serializeInput(all[i]);
-            }
-        }
-
-        return this.serializedData;
-    }
-
-    /**
-     * Serialize an input
-     * @param {HTMLElement} input 
-     * @return {object}
-     */
-    serializeInput(input){
-        let name = input.getAttribute('name');
-        let type = input.getAttribute('type');
-        let val = null;
-        switch(type){
-            case 'checkbox':
-                val = this.convertCheckbox(input, this.options.checkboxMode);
-                break;
-            case 'radio':
-                if(input.checked){
-                    val = input.value;
-                }
-                break;
-            case 'file':
-                if (input.files.length > 0) {
-                    val = input.files[0];
-                }
-                break;
-            case 'number':
-                val = Number(input.value);
-                break;
-            default:
-                val = input.value;
-                break;
-        }
-
-        return this.serializedData[name] = val;
-    }
-
-    /**
-     * Serialize a textarea
-     * @param {HTMLElement} input 
-     * @return {object}
-     */
-    serializeTextarea(textarea){
-        return this.serializeSelect(textarea);        
-    }
-
-    /**
-     * Serialize a select
-     * @param {HTMLElement} input 
-     * @return {object}
-     */
-    serializeSelect(select){
-        let name = select.getAttribute('name');
-        return this.serializedData[name] = select.value;
-    }
-
-    /**
-     * Format the already serialized data
-     * into a string or an object
-     * @param {object} data 
-     * @param {number} mode
-     * @return {string|object}
-     */
-    formatSerializedData(data, mode){
-		switch(mode){
-			case FormTemplate.serializeMode.toString:
-				return this.serializedDataToString(data);
-            default:
-            case FormTemplate.serializeMode.toObject:
-                this.serializedData = Object.unflatten(this.serializedData);
-                return this.serializedData;
-		}
-    }
-
-    /**
-     * Serialize data into a string
-     * @param {object} data 
-     * @return {string}
-     */
-	serializedDataToString(data){
-		let str = "";
-		let c = 0;
-		let len = Object.keys(data).length;
-		for(let k in data){
-			str += k + "=" + data[k];
-			if(c++ < len - 1){
-                str += "&";
-            }
-		}
-		return str;
-	}
-
-    /**
-     * Submit the form.
-     * Serialize data and pass the data
-     * to the submitRequest function.
-     * @return {Promise}
-     */
-    submit(){
-        let self = this;
-        this.serializedData = this.serialize();
-        this.formattedSerializedData = this.formatSerializedData(this.serializedData, this.options.serializeMode);
-        return this.options.submitRequest(this.formattedSerializedData)
-            .then(function(data){
-                self.emit('success', data);
-            })
-            .catch(function(err){
-                self.emit('fail', err);
-            });
-    }
-}
-FormTemplate.checkboxMode = {
-	boolean : 0,
-	number : 1,
-	string : 2,
-	onOff : 3
-};
-FormTemplate.serializeMode = {
-	toString : 0,
-	toOrderedString : 1,
-	toObject : 2,
-	toValue : 3
-};
-customElements.define('template-form', FormTemplate);
-
-/**
- * Table Template.
- * Builds rows of data with the render() function.
- * @extends {Template}
- */
-class TableTemplate extends Template {
-
-    /**
-     * Constructor
-     * @param {object} [options={}] 
-     * @param {boolean} [options.alwaysRebuild=false] - whether to always wipe
-     * and then rebuild the table
-     * @param {string[]} [options.columns=[]] - array of column names, required for a
-     * table that is not defined first in HTML
-     * @param {string[]} [options.columnTitles=[]] - array of column titles, optional if
-     * you want the header to display a different title for each column instead of its name
-     * @param {object} [options.elements] - the table elements
-     * @param {string} [options.elements.table="table"] - the table element selector
-     * @param {string} [options.elements.thead="thead"] - the thead element selector
-     * @param {string} [options.elements.theadTr="theadTr"] - the thead row element selector
-     * @param {string} [options.elements.tbody="tbody"] - the thead element selector
-     * @param {string} [options.elements.tfoot="tfoot"] - the tfoot element selector
-     * @param {string} [options.elements.tr="tr"] - the tbody row element selector
-     * @return {TableTemplate}
-     */
-    constructor(options = {}){
-        let defaults = {
-            alwaysRebuild: false,
-            columns: [],
-            columnTitles: [],
-            elements: {
-                table: 'table',
-                thead: 'thead',
-                theadTr: 'thead > tr',
-                tbody: 'tbody',
-                tfoot: 'tfoot',
-                tr: 'tbody > tr'
-            }
-        };
-        super(Object.extend(defaults, options));
-        this.schema = {};
-        this.rowManager = null;
-        return this;
-    }
-
-    /**
-     * Called when the element is 
-     * connected to the DOM.
-     */
-    connectedCallback(){
-        super.connectedCallback();
-        if(this.elements && this.elements.tr instanceof HTMLElement){
-            this.columnCount = this.elements.tr.querySelectorAll('td').length;
-            // remove the default row, it will be used as a template
-            this.elements.tr.remove();
-        }
-        this.createRowManager();
-    }
-
-    /**
-     * Create the row manager.
-     * If the tbody does not exist, this
-     * manager will exist only virtually
-     * until it is appended somewhere.
-     * @return {ElementManager}
-     */
-    createRowManager(){
-        let wrapper = (this.elements && this.elements.tbody instanceof HTMLElement)
-            ? this.elements.tbody
-            : document.createElement('div');
-        return this.rowManager = new ElementManager(wrapper, this.elements.tr);
-    }
-
-    /**
-     * Create HTML. In the very least,
-     * we have a table and a tbody.
-     * @return {TableTemplate}
-     */
-    createHtml(){
-        this.innerHTML = '<table><tbody></tbody></table>';
-        return this;
-    }
-
-    /**
-     * Render the table.
-     * Essentially, pass the data to rowManager
-     * who will take care of rendering the rows.
-     * @param {object} data 
-     * @return {TableTemplate}
-     */
-    render(data){
-        this.cacheData(data);
-        this.processRenderData(data);
-
-        // empty the table if the option is set
-        // or if the data is an array and there is no primary key
-        // without a primary key, we don't know how to manage rows
-        if(this.options.alwaysRebuild){
-            this.empty();
-        }
-        else if(Array.isArray(this.renderData)){
-            if(typeof this.renderData[0][this.options.primaryKey] === 'undefined'){
-                this.empty();
-            }
-        }
-
-        this.rowManager.render(this.renderData);
-        return this;
-    }
-
-    /**
-     * Empty the table tbody
-     * @return {TableTemplate}
-     */
-    empty(){
-        this.rowManager.empty();
-        return this;
-    }
-
-    // header
-
-    /**
-     * Create a header element
-     * @return {HTMLElement}
-     */
-    createHeader(){
-        return document.createElement('thead');
-    }
-
-    /**
-     * Create a header column element
-     * @return {HTMLElement}
-     */
-    createHeaderColumn(){
-        return document.createElement('th');
-    }
-
-    /**
-     * Add a header element
-     * @param {HTMLElement} header
-     * @return {TableTemplate}
-     */
-    addHeader(header){
-        Template.prepend(header, this.elements.table);
-        return this;
-    }
-
-    /**
-     * Generate the header with a row of th columns.
-     * The header is generated from the column names
-     * set in this.options.columns
-     * @param {string[]} columnNames - a string array of column names
-     * @param {string[]} [columnTitles] - a string array of column titles
-     * @return {TableTemplate}
-     */
-    generateHeader(columnNames, columnTitles){
-        this.elements.thead = this.createHeader();
-        let row = this.createRow();
-        for(let i = 0; i < columnNames.length; i++){
-            let col = this.createHeaderColumn();
-            col.innerHTML = columnTitles ? columnTitles[i] : columnNames[i];
-            row.appendChild(col);
-        }
-        this.elements.thead.appendChild(row);
-        this.addHeader(this.elements.thead);
-        return this;
-    }
-
-    // row
-
-    /**
-     * Create a row element
-     * @return {HTMLElement}
-     */
-    createRow(){
-        return document.createElement('tr');
-    }
-
-    /**
-     * Create a row by cloning the tbody tr.
-     * @return {HTMLElement}
-     */
-    cloneRow(){
-        return this.elements.tr.cloneNode(true);
-    }
-
-    /**
-     * Append a row to the tobdy.
-     * @param {HTMLElement} row
-     * @return {TableTemplate}
-     */
-    appendRow(row){
-        this.elements.tbody.appendChild(row);
-        return this;
-    }
-
-    /**
-     * Remove a row
-     * @param {HTMLElement} row 
-     * @return {TableTemplate}
-     */
-    removeRow(row){
-
-    }
-
-    /**
-     * Generate the cloneable row that all other
-     * rows in the table are cloned from. This is not
-     * used to create a new row to add to the table.
-     * Each column in this row has it's data-name attribute
-     * set to the name of the column in this.options.columns.
-     * @return {TableTemplate}
-     */
-    generateRow(){
-        this.elements.tr = this.createRow();
-        for(let i = 0; i < this.options.columns.length; i++){
-            let col = this.createColumn();
-            col.setAttribute("data-name", this.options.columns[i]);
-            this.elements.tr.appendChild(col);
-        }
-        this.elements.tbody.appendChild(this.elements.tr);
-        return this;
-    }
-
-    // column
-
-    /**
-     * Create a column
-     * @return {HTMLElement}
-     */
-    createColumn(){
-        return document.createElement('td');
-    }
-
-    /**
-     * Append a column to a row
-     * @param {HTMLElement} row
-     * @param {HTMLElement} column
-     * @return {TableTemplate}
-     */
-    appendColumnToRow(row, column){
-        row.appendChild(column);
-        return this;
-    }
-
-    /**
-     * Reset the DOM object.
-     * This walks through the extracted DOM object
-     * and removes each element. Then, it resets
-     * the DOM object to a blank object. 
-     * @return {TableTemplate}
-     */
-    resetDom(){
-        if(this.elements){
-            for(let k in this.elements){
-                let el = this.elements[k];
-                if(el instanceof HTMLElement){
-                    el.remove();
-                }
-            }
-        }
-        this.elements = {};
-        return this;
-    }
-
-    /**
-     * Set the table's schema.
-     * Wipe the entire table and rebuild
-     * the header and the main tr.
-     * @param {object} schema
-     * @param {string[]} schema.columns
-     * @param {string[]} [schema.columnTitles]
-     * @param {string} [schema.primaryKey]
-     * @return {TableTemplate} 
-     */
-    setSchema(schema){
-        this.options.columns = schema.columns;
-        if(schema.columnTitles){
-            this.options.columnTitles = schema.columnTitles;
-        }
-        if(schema.primaryKey){
-            this.options.primaryKey = schema.primaryKey;
-        }
-        this.resetDom();
-        this.createHtml();
-        this.findElements(this.options.elements);
-        this.generateHeader(this.options.columns, this.options.columnTitles);
-        this.generateRow();
-        return this;
-    }
-}
-customElements.define('template-table', TableTemplate);
-
-/**
- * Popup Template
- * @extends {Template}
- */
-class PopupTemplate extends Template {
-
-    /**
-     * Constructor
-     * @param {object} options 
-     * @param {string} [options.size="medium"]
-     * @param {boolean} [options.showHeader=true]
-     * @param {boolean} [options.showClose=true]
-     * @param {boolean} [options.showFooter=true]
-     * @param {object} [options.elements]
-     * @param {string} [options.elements.header=".popup-header"]
-     * @param {string} [options.elements.title=".popup-title"]
-     * @param {string} [options.elements.close=".template-popupcloseBtn"]
-     * @param {string} [options.elements.body=".popup-body"]
-     * @param {string} [options.elements.footer=".popup-footer"]
-     * @return {PopupTemplate}
-     */
-    constructor(options = {}){
-        let defaults = {
-            displayBlock: false,
-            size: 'medium',
-            showHeader: true,
-            showClose: true,
-            showFooter: true,
-            elements: {
-                header: '.popup-header',
-                title: '.popup-title',
-                close: '.popup-close',
-                body: '.popup-body',
-                footer: '.popup-footer'
-            }
-        }
-        super(Object.extend(defaults, options));
-        return this;
-    }
-
-    /**
-     * Connected callback
-     */
-    connectedCallback(){
-        super.connectedCallback();
-        this.applyOptions(this.options);
-        this.attachButtonHandlers();
-    }
-
-    /**
-     * Attach button handlers
-     * @return {PopupTemplate}
-     */
-    attachButtonHandlers(){
-        let self = this;
-        this.elements.close.addEventListener('click', function(e){
-            self.close();
-        });
-        return this;
-    }
-
-    /**
-     * Set the PopupTemplate's innerHTML from the default layout
-     * @return {PopupTemplate}
-     */
-    createHtml(){
-        this.innerHTML = `
-            <div class="popup-content">
-                <div class="popup-header">
-                    <div class="popup-title"></div>
-                    <button type="button" class="btn-none popup-close">
-                        X
-                    </button>
-                </div>
-                <div class="popup-body"></div>
-                <div class="popup-footer"></div>
-            </div>`.trim();
-        return this;
-    }
-
-    /**
-     * Apply options to the PopupTemplate
-     * @param {object} options 
-     * @return {PopupTemplate}
-     */
-    applyOptions(options){
-        if(!options.showHeader && this.elements.header){
-            this.elements.header.remove();
-        }
-        if(!options.showClose && this.elements.close){
-            this.elements.close.remove();
-        }
-        if(!options.showFooter && this.elements.footer){
-            this.elements.footer.remove();
-        }
-        return this;
-    }
-
-    /**
-     * Open the popup by adding the 'popup-open' class.
-     * Fade in the PopupTemplate.
-     * @return {PopupTemplate}
-     */
-    open(){
-        document.body.classList.add('popup-open');
-        this.show();
-        return this;
-    }
-
-    /**
-     * Close the popup by removing the 'popup-open' class
-     * Fadeout in the PopupTemplate.
-     * @return {PopupTemplate}
-     */
-    close(){
-        document.body.classList.remove('popup-open');
-        this.hide();
-        return this;
-    }
-
-    /**
-     * Render the title
-     * @param {string} html 
-     * @return {PopupTemplate}
-     */
-    renderTitle(html){
-        this.elements.title.innerHTML = html;
-        return this;
-    }
-
-    /**
-     * Render the body
-     * @param {string} html 
-     * @return {PopupTemplate}
-     */
-    renderBody(html){
-        this.elements.body.innerHTML = html;
-        return this;
-    }
-
-    /**
-     * Render the footer
-     * @param {string} html 
-     * @return {PopupTemplate}
-     */
-    renderFooter(html){
-        this.elements.footer.innerHTML = html;
-        return this;
-    }
-}
-customElements.define('template-popup', PopupTemplate);
 
 const Status = {
     none: "none",
@@ -2332,354 +1456,3 @@ Status.icon[Status.info] = '';
 Status.icon[Status.processing] = '<div class="spinner-container"><div class="spinner-wheel"></div></div>';
 Status.icon[Status.success] = '';
 Status.icon[Status.warning] = '';
-
-/**
- * Feedback Template
- * @extends {Template}
- */
-class FeedbackTemplate extends Template {
-    static get observedAttributes() {return ['status', 'text'];}
-
-    /**
-     * Constructor
-     * @param {object} [options={}] 
-     * @param {string} [options.elements.icon=".feedback-icon"]
-     * @param {string} [options.elements.text=".feedback-text"]
-     * @param {string} [options.elements.close=".feedback-close"]
-     * @return {FeedbackTemplate}
-     */
-    constructor(options = {}){
-        let defaults = {
-            elements: {
-                icon: '.feedback-icon',
-                text: '.feedback-text',
-                close: '.feedback-close'
-            }
-        };
-        super(Object.extend(defaults, options));
-        return this;
-    }
-
-    /**
-     * Connected callback
-     */
-    connectedCallback(){
-        super.connectedCallback();
-        this.attachButtonHandlers();
-    }
-
-    /**
-     * Attach button handlers
-     * @return {FeedbackTemplate}
-     */
-    attachButtonHandlers(){
-        let self = this;
-        this.elements.close.addEventListener('click', function(){
-            self.remove();
-        });
-        return this;
-    }
-
-    /**
-     * Set the innerHTML to the default layout
-     * @return {FeedbackTemplate}
-     */
-    createHtml(){
-        this.innerHTML = `
-            <div class="feedback-icon">
-                OK!
-            </div>
-            <div class="feedback-text"></div>
-            <button class="feedback-close">
-                X
-            </button>`.trim();
-        return this;
-    }
-
-    /**
-     * Callback for when an attribute is changed.
-     * If the "status" attribute is changed, update
-     * the icon and background classes.
-     * If the "text" attribute is changed, update the
-     * text HTML.
-     * @param {string} name - attribute name
-     * @param {string} oldValue - old value
-     * @param {string} newValue - new value
-     * @return {FeedbackTemplate}
-     */
-    attributeChangedCallback(name, oldValue, newValue) {
-        if(name === "status"){
-            let clazz = Status.class.none;
-            let icon = Status.icon.none;
-            if(newValue && newValue !== "" &&  typeof Status.bgclass[newValue] !== 'undefined'){
-                clazz = Status.bgclass[newValue];
-                icon = Status.icon[newValue];
-            }
-            this.setClass(clazz).setIcon(icon);
-        }
-        else if(name === "text"){
-            this.setText(newValue);
-        }
-    }
-    
-    /**
-     * Set the status attribute
-     * @param {string} status 
-     * @return {FeedbackTemplate}
-     */
-    setStatus(status){
-        this.setAttribute('status', status);
-        return this;
-    }
-
-    /**
-     * Remove all status- based classes
-     * @return {FeedbackTemplate}     
-     */
-    clearStatusClass(){
-        this.classList.remove(...Status.bgclassArray);
-        return this;
-    }
-
-    /**
-     * Set the class
-     * @param {string} clazz
-     * @return {FeedbackTemplate}
-     */
-    setClass(clazz){
-        this.clearStatusClass();
-        this.classList.add(clazz);
-        return this;
-    }
-
-    /**
-     * Set the text 
-     * @param {string} text
-     * @return {FeedbackTemplate}     
-     */
-    setText(text){
-        this.elements.text.textContent = text;
-        return this;
-    }
-
-    /**
-     * Set the icon 
-     * @param {string} text
-     * @return {FeedbackTemplate}     
-     */
-    setIcon(icon){
-        this.elements.icon.innerHTML = icon;
-        return this;
-    }
-
-    /**
-     * Render the FeedbackTemplate
-     * @param {string} status 
-     * @param {string} text 
-     * @param {string} icon 
-     * @return {FeedbackTemplate}
-     */
-    render(status, text, icon){
-        return this.setStatus(status).setText(text).setIcon(icon);
-    }
-
-    /**
-     * Render an error feedback
-     * @param {string} message 
-     * @return {FeedbackTemplate}
-     */
-    renderError(message){
-        return this.render(Status.error, message, Status.icon[Status.error]);
-    }
-
-    /**
-     * Render an info feedback
-     * @param {string} message 
-     * @return {FeedbackTemplate}
-     */
-    renderInfo(message){
-        return this.render(Status.info, message, Status.icon[Status.error]);
-    }
-
-    /**
-     * Render a processing feedback
-     * @param {string} message 
-     * @return {FeedbackTemplate}
-     */
-    renderProcessing(message){
-        return this.render(Status.processing, message, Status.icon[Status.processing]);
-    }
-
-    /**
-     * Render a success feedback
-     * @param {string} message 
-     * @return {FeedbackTemplate}
-     */
-    renderSuccess(message){
-        return this.render(Status.success, message, Status.icon[Status.success]);
-    }
-
-    /**
-     * Render a warning feedback
-     * @param {string} message 
-     * @return {FeedbackTemplate}
-     */
-    renderWarning(message){
-        return this.render(Status.warning, message, Status.icon[Status.warning]);
-    }
-}
-customElements.define('template-feedback', FeedbackTemplate);
-
-/**
- * StatusText Template
- * @extends {Template}
- */
-class StatusTemplate extends Template {
-    static get observedAttributes() {return ['status', 'text']; }
-
-    /**
-     * Constructor
-     * @param {object} [options={}]
-     * @return {StatusTemplate}
-     */
-    constructor(options){
-        super(options);
-        return this;
-    }
-    
-    /**
-     * Adds a "status" and "text" attribute
-     * to the element if they do not exist.
-     * @return {StatusTemplate}
-     */
-    connectedCallback(){
-        super.connectedCallback();
-        if(!this.hasAttribute('status')){
-            this.setAttribute('status', Status.none);
-        }
-        if(!this.hasAttribute('text')){
-            this.setAttribute('text', '');
-        }
-        return this;
-    }
-
-    /**
-     * Callback for when an attribute is changed.
-     * If the "status" attribute is changed, update
-     * the icon and background classes.
-     * If the "text" attribute is changed, update the
-     * text HTML.
-     * @param {string} name - attribute name
-     * @param {string} oldValue - old value
-     * @param {string} newValue - new value
-     * @return {FeedbackTemplate}
-     */
-    attributeChangedCallback(name, oldValue, newValue) {
-        if(name === "status"){
-            let clazz = Status.class.none;
-            if(newValue && newValue !== "" &&  typeof Status.class[newValue] !== 'undefined'){
-                clazz = Status.class[newValue];
-            }
-            this.setClass(clazz);
-        }
-        else if(name === "text"){
-            this.setText(newValue);
-        }
-    }
-
-    /**
-     * Set the status
-     * @param {string} status 
-     * @return {StatusTemplate}
-     */
-    setStatus(status){
-        this.setAttribute('status', status);
-        return this;
-    }
-
-    /**
-     * Remove all status- classes
-     * @return {StatusTemplate}
-     */
-    clearStatusClass(){
-        this.classList.remove(...Status.classArray);
-        return this;
-    }
-
-    /**
-     * Set the class
-     * @param {string} clazz 
-     * @return {StatusTemplate}
-     */
-    setClass(clazz){
-        this.clearStatusClass();
-        this.classList.add(clazz);
-        return this;
-    }
-
-    /**
-     * Set the text
-     * @param {string} text 
-     * @return {StatusTemplate}
-     */
-    setText(text){
-        this.textContent = text;
-        return this;
-    }
-
-    /**
-     * Render the StatusTemplate
-     * @param {string} status 
-     * @param {string} text 
-     * @return {StatusTemplate}
-     */
-    render(status, text){
-        return this.setStatus(status).setText(text);
-    }
-
-    /**
-     * Render the StatusTemplate with no status
-     * @param {string} text 
-     * @return {StatusTemplate}
-     */
-    renderNone(text){
-        return this.render(Status.none, text);
-    }
-
-    /**
-     * Render the StatusTemplate with error status
-     * @param {string} text 
-     * @return {StatusTemplate}
-     */
-    renderError(text){
-        return this.render(Status.error, text);
-    }
-
-    /**
-     * Render the StatusTemplate with success status
-     * @param {string} text 
-     * @return {StatusTemplate}
-     */
-    renderSuccess(text){
-        return this.render(Status.success, text);
-    }
-
-    /**
-     * Render the StatusTemplate with info status
-     * @param {string} text 
-     * @return {StatusTemplate}
-     */
-    renderInfo(text){
-        return this.render(Status.info, text);
-    }
-
-    /**
-     * Render the StatusTemplate with warning status
-     * @param {string} text 
-     * @return {StatusTemplate}
-     */
-    renderWarning(text){
-        return this.render(Status.warning, text);
-    }
-}
-customElements.define('template-status', StatusTemplate);

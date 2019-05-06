@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <title>Todo</title>
-        <link rel="stylesheet" href="/Template2/src/css/template2.css">
+        <title>Template2</title>
+        <link rel="stylesheet" href="../src/css/template2.css">
     </head>
     <body>
         <header class="hidden"></header>
@@ -93,9 +93,9 @@
                             <input type="number" name="job.skills.suaveness">
                         </div>
                     </div>
-                    <div>
-                        <button type="reset">Reset</button>
-                        <button type="submit">Submit</button>
+                    <div class="form-footer">
+                        <button name="reset" type="reset">Reset</button>
+                        <button name="submit" type="submit">Submit</button>
                     </div>
                 </form>
             </template-form>
@@ -103,6 +103,92 @@
             <!-- wizard example -->
             <hr>
             <h3>Wizard Example</h3>
+            <template-wizard id="wizard">
+                <div class="wizard-navs">
+                    <button type="button" name="nav1" class="wizard-nav">Step 1</button>
+                    <button type="button" name="nav2" class="wizard-nav">Step 2</button>
+                    <button type="button" name="nav3" class="wizard-nav">Step 3</button>
+                </div>
+                <div class="wizard-form">
+                    <template-form>
+                        <form>
+                            <div class="wizard-tabs">
+                                <div class="wizard-tab" data-name="tab1">
+                                    <div>
+                                        <label>Name</label>
+                                        <input type="text" name="name">
+                                    </div>
+                                    <div>
+                                        <label>Age</label>
+                                        <input type="number" name="age">
+                                    </div>
+                                    <div>
+                                        <label>Location</label>
+                                        <select name="location">
+                                            <option value="here">Here</option>
+                                            <option value="there">There</option>
+                                            <option value="somewhere">Somewhere</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="wizard-tab" data-name="tab2">
+                                    <div>
+                                        <label>Personality Type</label>
+                                        <input type="radio" name="personality" value="a"> A
+                                        <input type="radio" name="personality" value="b"> B
+                                        <input type="radio" name="personality" value="c"> C
+                                    </div>
+                                    <div>
+                                        <label>Hobbies</label>
+                                        <input type="checkbox" name="hobbies.dancing"> Dancing
+                                        <input type="checkbox" name="hobbies.partying"> Partying
+                                        <input type="checkbox" name="hobbies.learning"> Learning
+                                    </div>
+                                </div>
+                                <div class="wizard-tab" data-name="tab3">
+                                    <div>
+                                        <label>Job Performance</label>
+                                        <select name="job.performance">
+                                            <option value="0">Good</option>
+                                            <option value="1">Gooder</option>
+                                            <option value="2">Goodest</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <div>
+                                            <label>Math</label>
+                                            <input type="number" name="job.skills.math">
+                                        </div>
+                                        <div>
+                                            <label>Language</label>
+                                            <input type="number" name="job.skills.language">
+                                        </div>
+                                        <div>
+                                            <label>Suaveness</label>
+                                            <input type="number" name="job.skills.suaveness">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-footer">
+                                <button name="reset" type="reset">Reset</button>
+                                <button name="submit" type="submit">Submit</button>
+                            </div>
+                        </form>
+                    </template-form>
+                </div>
+                <div class="wizard-pager">
+                    <template-pager>
+                        <button name="previous" type="button">Previous</button>
+                        <div class="pager-input">
+                            <input name="page" type="number" class="pager-page">
+                            <span>/</span>
+                            <span data-name="pageCount"></span>
+                        </div>
+                        <button name="next" type="button">Next</button>
+                    </template-pager>
+                </div>
+            </template-wizard>
 
             <!-- popup example -->
             <hr>
@@ -135,11 +221,31 @@
             <!-- feedback example -->
             <hr>
             <h3>Feedback Example</h3>
-            <template-feedback id="feedbackExample1"></template-feedback>
-            <template-feedback id="feedbackExample2"></template-feedback>
-            <template-feedback id="feedbackExample3"></template-feedback>
+            <template-feedback id="feedbackExample1">
+                <div class="feedback-icon"></div>
+                <div class="feedback-text"></div>
+                <button class="feedback-close">X</button>
+            </template-feedback>
+            <template-feedback id="feedbackExample2">
+                <div class="feedback-icon"></div>
+                <div class="feedback-text"></div>
+                <button class="feedback-close">X</button>
+            </template-feedback>
+            <template-feedback id="feedbackExample3">
+                <div class="feedback-icon"></div>
+                <div class="feedback-text"></div>
+                <button class="feedback-close">X</button>
+            </template-feedback>
 
-            <script src="/Template2/src/js/template2.js"></script>
-            <script src="/Template2/example/example.js"></script>
+            <script src="../src/js/eventSystem.js"></script>
+            <script src="../src/js/template2.js"></script>
+            <script src="../templates/feedback.js"></script>
+            <script src="../templates/form.js"></script>
+            <script src="../templates/pager.js"></script>
+            <script src="../templates/popup.js"></script>
+            <script src="../templates/status.js"></script>
+            <script src="../templates/table.js"></script>
+            <script src="../templates/wizard.js"></script>
+            <script src="example.js"></script>
     </body>
 </html>
