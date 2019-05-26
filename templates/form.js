@@ -46,20 +46,6 @@ class FormTemplate extends Template {
         super.connectedCallback();
         this.attachFormHandlers();
     }
-        
-    /**
-     * Set form options
-     * @param {object} options 
-     * @return {Form}
-     */
-    setOptions(options){
-        for(let k in options){
-            if(this.options.hasOwnProperty(k)){
-                this.options[k] = options[k];
-            }
-        }
-        return this;
-    }
 
     /**
      * Attach handlers to the default form events.

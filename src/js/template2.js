@@ -648,6 +648,24 @@ class Template extends HTMLElement {
             this.classList.add('template-block');
         }
     }
+        
+    /**
+     * Set Template options
+     * @param {object} options 
+     * @return {Template}
+     */
+    setOptions(options){
+        for(let k in options){
+            if(this.options.hasOwnProperty(k)){
+                this.options[k] = options[k];
+            }
+        }
+        return this;
+    }
+        
+    ////////////////////////////////////////////
+    // Events
+    ////////////////////////////////////////////
 
     /**
      * Add an event handler an elements event system.
@@ -796,7 +814,9 @@ class Template extends HTMLElement {
         return this;
     }
         
-    // tree
+    ////////////////////////////////////////////
+    // Tree
+    ////////////////////////////////////////////
 
     /**
      * Find and register elements into the elements object.
@@ -823,7 +843,15 @@ class Template extends HTMLElement {
                 name = found[i].getAttribute('data-name');
             }
             if(name){
-                elements[name] = found[i];
+                if(elements[name]){
+                    if(!Array.isArray(elements[name])){
+                        elements[name] = [elements[name]];
+                    }
+                    elements[name].push(found[i]);
+                }
+                else {
+                    elements[name] = found[i];
+                }
             }
         }
         return elements;
@@ -845,6 +873,20 @@ class Template extends HTMLElement {
      */
     getElements(){
         return this.elements;
+    }
+
+    /**
+     * Find the first matching child of the entire HTML document.
+     * @param {string} selector - any valid css selector
+     * @param {object} [options={}] - if element is a Template, options to set
+     * @return {HTMLElement|undefined}
+     */
+    static select(selector, options = {}){
+        let element = document.documentElement.querySelectorAll(selector)[0];
+        if(element && element.setOptions){
+            element.setOptions(options);
+        }
+        return element;
     }
 
     /**
@@ -983,7 +1025,9 @@ class Template extends HTMLElement {
         return this;
     }
 
-    // visibility
+    ////////////////////////////////////////////
+    // Visibility
+    ////////////////////////////////////////////
 
     /**
      * Determine if an element is visible
@@ -1085,7 +1129,9 @@ class Template extends HTMLElement {
         return Template.getStyle(this, style);
     }
 
-    // dimensions
+    ////////////////////////////////////////////
+    // Dimensions
+    ////////////////////////////////////////////
 
     /**
      * Set the height of an element
@@ -1125,7 +1171,9 @@ class Template extends HTMLElement {
         return this;
     }
 
-    // class
+    ////////////////////////////////////////////
+    // Class
+    ////////////////////////////////////////////
 
     /**
      * Add a class to an element
@@ -1230,7 +1278,9 @@ class Template extends HTMLElement {
         return this;
     }
 
-    // value
+    ////////////////////////////////////////////
+    // Value
+    ////////////////////////////////////////////
 
     static getValue(element){
         return element.value;
@@ -1249,7 +1299,9 @@ class Template extends HTMLElement {
         return this;
     }
 
-    // enable/disable
+    ////////////////////////////////////////////
+    // Enable/disable
+    ////////////////////////////////////////////
 
     /**
      * Set an element to enabled by
@@ -1287,7 +1339,9 @@ class Template extends HTMLElement {
         return this;
     }
 
-    // render
+    ////////////////////////////////////////////
+    // Render
+    ////////////////////////////////////////////
 
     /**
      * Cache data as-is in case the 
@@ -1357,6 +1411,7 @@ class Template extends HTMLElement {
         for(let k in _data){
             let value = _data[k];
             let element = elements[k];
+
             if(!element){
                 continue;
             }
@@ -1365,26 +1420,33 @@ class Template extends HTMLElement {
                 element.render(value);
                 continue;
             }
-            
-            if(element.tagName === "INPUT"){
-                let type = element.getAttribute('type');
-                if(type){
-                    if(type === 'checkbox' && value){
-                        element.checked = true;
-                    }
-                    else if(type === 'radio' && element.getAttribute('value') === value){
-                        element.checked = true;
-                    }
-                    else {
-                        element.value = value;
+
+            if(!Array.isArray(element)){
+                element = [element];
+            }
+
+            for(let i = 0; i < element.length; i++){
+                let thisElement = element[i];
+                if(thisElement.tagName === "INPUT"){
+                    let type = thisElement.getAttribute('type');
+                    if(type){
+                        if(type === 'checkbox' && value){
+                            thisElement.checked = true;
+                        }
+                        else if(type === 'radio' && thisElement.getAttribute('value') === value){
+                            thisElement.checked = true;
+                        }
+                        else {
+                            thisElement.value = value;
+                        }
                     }
                 }
-            }
-            else if (element.tagName === "SELECT"){
-                element.value = value;
-            }
-            else {
-                element.innerHTML = value;
+                else if (thisElement.tagName === "SELECT"){
+                    thisElement.value = value;
+                }
+                else {
+                    thisElement.innerHTML = value;
+                }
             }
         }
     }
