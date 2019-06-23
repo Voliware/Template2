@@ -1427,6 +1427,11 @@ class Template extends HTMLElement {
 
             for(let i = 0; i < element.length; i++){
                 let thisElement = element[i];
+
+                if(thisElement.getAttribute('data-render') === "false"){
+                    continue;
+                }
+
                 if(thisElement.tagName === "INPUT"){
                     let type = thisElement.getAttribute('type');
                     if(type){
