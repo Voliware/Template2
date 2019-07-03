@@ -615,6 +615,7 @@ class Template extends HTMLElement {
         this.renderData = {};
         this.isFirstRender = true;
         this.observer = new MutationObserver(this.mutationObserverCallback.bind(this));
+        this.logger = new Logger("Template", {level:0});
         return this;
     }
 
@@ -628,7 +629,7 @@ class Template extends HTMLElement {
             switch(mutation.type) {
                 case 'childList':
                 case 'subtree':
-                    console.log('mutated');
+                    this.logger.debug("Mutated");
                     return;
             }
         });
@@ -647,6 +648,15 @@ class Template extends HTMLElement {
         if(this.options.displayBlock){
             this.classList.add('template-block');
         }
+        this.attachHandlers();
+    }
+
+    /**
+     * Attach handlers to template elements.
+     * @return {Template}
+     */
+    attachHandlers(){
+        return this;
     }
         
     /**
@@ -668,6 +678,15 @@ class Template extends HTMLElement {
     ////////////////////////////////////////////
 
     /**
+     * Add an event system to a regulard HTML element
+     * @param {HTMLElement} element 
+     */
+    static addEventSystem(element){
+       element._template_eventSystem = new EventSystem();
+       element._template_boundEvents = {};
+    }
+
+    /**
      * Add an event handler an elements event system.
      * @param {HTMLElement} element 
      * @param {string} event 
@@ -681,20 +700,21 @@ class Template extends HTMLElement {
         let baseEvent = event.split('.')[0];
 
         // if it doesn't have one, create an event system for this element
-        if(!(element.eventSystem instanceof EventSystem)){
-            element.eventSystem = new EventSystem();
+        if(!element._template_eventSystem){
+            Template.addEventSystem(element);
         }
 
         // add all base events, ie the "click" in "click.namespace",
         // to the elements native event listener. If the event does 
         // not actually exist natively, it will simply not fire.
-        if(element.eventSystem.getHandlersCount(baseEvent) === 0){
-            element.addEventListener(baseEvent, function(e){
-                element.eventSystem.emit(baseEvent, e);
-            });
+        if(element._template_eventSystem.getHandlersCount(baseEvent) === 0){
+            element._template_boundEvents[baseEvent] = function(e){
+                element._template_eventSystem.emit(baseEvent, e);
+            };
+            element.addEventListener(baseEvent, element._template_boundEvents[baseEvent]);
         }
 
-        element.eventSystem.on(event, callback);
+        element._template_eventSystem.on(event, callback);
     }
 
     /**
@@ -711,18 +731,20 @@ class Template extends HTMLElement {
     static one(element, event, callback){
         let baseEvent = event.split('.')[0];
 
-        if(!(element.eventSystem instanceof EventSystem)){
-            element.eventSystem = new EventSystem();
+        // if it doesn't have one, create an event system for this element
+        if(!element._template_eventSystem){
+            Template.addEventSystem(element);
         }
 
-        if(this.eventSystem.getHandlersCount(baseEvent) === 0){
-            this.addEventListener(baseEvent, function(e){
-                self.emit(baseEvent, e);
-                self.removeEventListener(baseEvent, callback);
-            });
+        if(element._template_eventSystem.getHandlersCount(baseEvent) === 0){
+            element._template_boundEvents[baseEvent] = function(e){
+                element._template_eventSystem.emit(baseEvent, e);
+                element.removeEventListener(baseEvent, element._template_boundEvents[baseEvent]);
+            }
+            element.addEventListener(baseEvent, element._template_boundEvents[baseEvent]);
         }
 
-        this.eventSystem.one(event, callback);
+        element._template_eventSystem.one(event, callback);
     }
 
     /**
@@ -734,10 +756,14 @@ class Template extends HTMLElement {
      * @return {Template}
      */
     static off(element, event, removeAllChildHandlers = true){
+        if(!(element._template_eventSystem instanceof EventSystem)){
+            return;
+        }
+
         let baseEvent = event.split('.')[0];
-        this.eventSystem.off(event, removeAllChildHandlers);
-        if(this.eventSystem.getHandlersCount(baseEvent) > 0){
-            this.removeEventListener(baseEvent);
+        element._template_eventSystem.off(event, removeAllChildHandlers);
+        if(element._template_eventSystem.getHandlersCount(baseEvent) === 0){
+            element.removeEventListener(baseEvent, element._template_boundEvents[baseEvent]);
         }
     }
 
@@ -749,8 +775,8 @@ class Template extends HTMLElement {
      * @return {EventSystem}
      */
     static emit(element, event, data){
-        if(element.eventSystem instanceof EventSystem){
-            element.eventSystem.emit(event, data);
+        if(element._template_eventSystem instanceof EventSystem){
+            element._template_eventSystem.emit(event, data);
         }
     }
 
@@ -1475,6 +1501,7 @@ class Template extends HTMLElement {
         return this;
     }
 }
+Template.logger = new Logger("Template", {level: 0})
 customElements.define('template-element', Template);
 
 const Status = {
