@@ -543,16 +543,16 @@ class ElementManager extends EventSystem {
         }
         
         if(element){
-            if(isNew){
-                this.elements.set(id, element);
-                this.appendElement(element);              
-            }
             if(element instanceof Template){
                 element.render(data);
             }
             else {
                 Template.render(element, data);
             }  
+            if(isNew){
+                this.elements.set(id, element);
+                this.appendElement(element);              
+            }
         }
 
         return this;
@@ -616,6 +616,10 @@ class Template extends HTMLElement {
         this.isFirstRender = true;
         this.observer = new MutationObserver(this.mutationObserverCallback.bind(this));
         this.logger = new Logger("Template", {level:0});
+
+        this.findNamedElements();
+        this.findElements(this.options.elements);
+
         return this;
     }
 
@@ -642,8 +646,6 @@ class Template extends HTMLElement {
      * can be modified. That cannot happen in the constructor.
      */
     connectedCallback(){
-        this.findNamedElements();
-        this.findElements(this.options.elements);
         // by default, templates have no display
         if(this.options.displayBlock){
             this.classList.add('template-block');
