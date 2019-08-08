@@ -1,0 +1,32 @@
+{
+  "name": "template2",
+  "version": "1.0.0",
+  "description": "a tiny client-side library for rendering and generating HTML",
+  "main": "build.js",
+  "directories": {
+    "example": "example"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "^6.2.0",
+    "uglify-es": "^3.3.9"
+  },
+  "scripts": {
+    "build": "node build",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Voliware/Template2.git"
+  },
+  "keywords": [
+    "template",
+    "html"
+  ],
+  "author": "Anthony Agostino",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Voliware/Template2/issues"
+  },
+  "homepage": "https://github.com/Voliware/Template2#readme"
+}

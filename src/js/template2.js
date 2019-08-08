@@ -615,7 +615,6 @@ class Template extends HTMLElement {
         this.renderData = {};
         this.isFirstRender = true;
         this.observer = new MutationObserver(this.mutationObserverCallback.bind(this));
-        this.logger = new Logger("Template", {level:0});
 
         this.findNamedElements();
         this.findElements(this.options.elements);
@@ -633,7 +632,7 @@ class Template extends HTMLElement {
             switch(mutation.type) {
                 case 'childList':
                 case 'subtree':
-                    this.logger.debug("Mutated");
+                    console.debug("Mutated");
                     return;
             }
         });
@@ -1503,7 +1502,6 @@ class Template extends HTMLElement {
         return this;
     }
 }
-Template.logger = new Logger("Template", {level: 0})
 customElements.define('template-element', Template);
 
 const Status = {
