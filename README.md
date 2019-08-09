@@ -1,6 +1,16 @@
 # Template2
 Template2 is a tiny client-side library for rendering and manipulating HTML. The Template class is both extendable and statically available. It also provides a namespaced Event System.
 
+The bundle includes several useful premade Templates for forms, tables, and more:
+```js
+<script src="https://cdn.jsdelivr.net/npm/@voliware/template2@1.0.2/dist/template2-bundle.min.js"></script>
+````
+
+Otherwise, the basic build contains just the Template class
+```js
+<script src="https://cdn.jsdelivr.net/npm/@voliware/template2@1.0.2/dist/template2.min.js"></script>
+````
+
 ## The Problem
 Generating and controlling HTML has become cumbersome. Simple web pages and applications are overburdened with complex APIs and massive libraries. Logic has found its way into HTML pages, and HTML has found itself in Javascript files. 
 
@@ -135,3 +145,8 @@ user.renderOnlineStatus("online");
 ```
 
 This is the most natural way to add new functionality to HTML elements.
+
+# Development
+Install with
+
+`npm install @voliware/template2`
