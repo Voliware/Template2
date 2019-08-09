@@ -14,8 +14,8 @@ const templates = [
     './templates/table.js',
     './templates/wizard.js',
 ];
-const base = './dist/template2.1.0.0.min.js';
-const bundle = './dist/template2-bundle.1.0.0.min.js';
+const base = './dist/template2.min.js';
+const bundle = './dist/template2-bundle.min.js';
 
 function readCode(files){
     let code = "";
