@@ -570,7 +570,12 @@ class ElementManager extends EventSystem {
         let dataObj = {};
         for(let i = 0; i < dataArr.length; i++){
             let id = dataArr[i][primaryKey];
-            dataObj[id] = dataArr[i];
+            if(typeof id === "undefined"){
+                console.error(`dataArrayToDataObject: object does not have required "${primaryKey}" value`)
+            }
+            else {
+                dataObj[id] = dataArr[i];
+            }
         }
         return dataObj;
     }
@@ -1309,18 +1314,37 @@ class Template extends HTMLElement {
     // Value
     ////////////////////////////////////////////
 
+    /**
+     * Get the value of an element
+     * @param {HTMLElement} element
+     * @return {string} 
+     */
     static getValue(element){
         return element.value;
     }
 
+    /**
+     * Get the value of the template
+     * @return {string} 
+     */
     getValue(){
         return Template.getValue(this);
     }
 
+    /**
+     * Set the value of an element
+     * @param {HTMLElement} element
+     * @param {string} 
+     */
     static setValue(element, value){
         element.value = value;
     }
 
+    /**
+     * Set the value of the template
+     * @param {string} 
+     * @return {Template}
+     */
     setValue(value){
         Template.setValue(this, value);
         return this;
@@ -1374,6 +1398,7 @@ class Template extends HTMLElement {
      * Cache data as-is in case the 
      * original data is required.
      * @param {object} data 
+     * @return {object}
      */
     cacheData(data){
         return this.cachedData = Object.extend({}, data);
@@ -1490,8 +1515,8 @@ class Template extends HTMLElement {
      * @return {Template}
      */
     render(data){
-        this.cacheData(data);
-        this.processRenderData(Object.extend({}, data));
+        this.cachedData = this.cacheData(data);
+        this.renderData = this.processRenderData(Object.extend({}, data));
         this.observer.observe(this, {
             childList: true,
             subtree: true
