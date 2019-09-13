@@ -1,11 +1,23 @@
-const uglify = require('uglify-es');
-const fs = require('fs');
+const Build = require('@voliware/node-build').Build;
+const version = "1.0.3";
 
-const src = [
+// base
+const jsBaseInput = [
     './src/js/eventSystem.js',
     './src/js/template2.js'
 ];
-const templates = [
+const jsBaseOutput = './dist/template2.min.js';
+const jsBaseConfig = {
+    name: "Template JS [base]",
+    version: version,
+    input: jsBaseInput,
+    output: jsBaseOutput
+};
+
+// bundle
+const jsBundleInput = [
+    './src/js/eventSystem.js',
+    './src/js/template2.js',
     './templates/feedback.js',
     './templates/form.js',
     './templates/pager.js',    
@@ -14,77 +26,24 @@ const templates = [
     './templates/table.js',
     './templates/wizard.js',
 ];
-const base = './dist/template2.min.js';
-const bundle = './dist/template2-bundle.min.js';
+const jsBundleOutput = './dist/template2-bundle.min.js';
+const jsBundleConfig = {
+    name: "Template JS [bundle]",
+    version: version,
+    input: jsBundleInput,
+    output: jsBundleOutput
+};
 
-function readCode(files){
-    let code = "";
-    for(let i = 0; i < files.length; i++){
-        code += fs.readFileSync(files[i])
-        if(!code){
-            console.error("Failed to read file");
-        }
-    }
-    return code;
-}
+// css
+const cssInput = './src/css/template2.css';
+const cssOutput = './dist/template2.min.css';
+const cssConfig = {
+    name: "Template CSS",
+    version: version,
+    input: cssInput,
+    output: cssOutput
+};
 
-function printFiles(files){
-    let text = "";
-    for(let i = 0; i < files.length; i++){
-        text += `  ${files[i]}`
-        if(i + 1 !== files.length){
-            text += "\n";
-        }
-    }
-    return text;
-}
-
-function buildBase(){
-    let code = readCode(src);
-    let result = uglify.minify(code.toString());
-    return new Promise(function(resolve, reject){
-        fs.writeFile(base, result.code, function(err){
-            let status = "OK";
-            if(err){
-                status = "ERR";
-                console.error(err);
-            } 
-            console.log(`\r\n\\\\     \/\/ \/\/\/\/\/\/ \/\/     \/\/ \\\\           \/\/ \/\/\\ \\\\\\\\\\\\ \\\\\\\\\\\\\\\r\n \\\\   \/\/ \/\/  \/\/ \/\/     \/\/   \\\\   \/\/\\   \/\/ \/\/ \\\\ \\\\  \\\\ \\\\___\r\n  \\\\ \/\/ \/\/  \/\/ \/\/     \/\/     \\\\ \/\/ \\\\ \/\/ \/\/   \\\\ \\\\\\\\\\  \\\\\r\n   \\\\\/ \/\/\/\/\/\/ \/\/\/\/\/\/ \/\/       \\\\\/   \\\\\/ \/\/     \\\\ \\\\  \\\\ \\\\\\\\\\\\`);
-            console.log('\r\n');
-            console.log('TEMPLATE2 - V1.0.0');
-            console.log('\r\n');
-            console.log('BUILD: base');
-            console.log(`- ${(new Date()).toLocaleString()}`)
-            console.log('- INPUT');
-            console.log(`${printFiles(src)}`);
-            console.log(`- OUTPUT: ${base}`);
-            console.log(`- STATUS: ${status}`);
-            resolve();
-        });
-    });
-}
-
-function buildBundle(){
-    let code = readCode(src) + readCode(templates);
-    let result = uglify.minify(code.toString());
-    return new Promise(function(resolve, reject){
-        fs.writeFile(bundle, result.code, function(err){
-            let status = "OK";
-            if(err){
-               status = "ERR";
-               console.error(err);
-            } 
-            console.log('\r\n');
-            console.log('BUILD: bundle');
-            console.log(`- ${(new Date()).toLocaleString()}`)
-            console.log('- INPUT');
-            console.log(`${printFiles(src)}`);
-            console.log(`${printFiles(templates)}`);
-            console.log(`- OUTPUT: ${bundle}`);
-            console.log(`- STATUS: ${status}`);
-            resolve();
-        });
-    });
-}
-
-buildBase().then(buildBundle)
+// build
+let configs = [jsBaseConfig, jsBundleConfig, cssConfig];
+new Build(configs).run();
