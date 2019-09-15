@@ -38,7 +38,7 @@ let tableData2 = [
 ];
 
 // table captured from DOM
-let table1 = Template.select("#tableExample");
+let table1 = Template.selectFirst("#tableExample");
 table1.render(tableData1);
 
 // table that does not exist in DOM
@@ -50,7 +50,7 @@ table2.setSchema({
     // optional, if you want the header to have different names
     columnTitles: ["Column Uno", "Column Dos", "Column Tres"]
 });
-table2.appendTo(Template.select('#tableExampleNoHtml'));
+table2.appendTo(Template.selectFirst('#tableExampleNoHtml'));
 table2.render(tableData1);
 setTimeout(function(){
     table2.render(tableData2);
@@ -80,7 +80,8 @@ let formData = {
     }
 };
 
-let form1 = Template.select('#formExample', {
+let form1 = Template.selectFirst('#formExample');
+form1.setOptions({
     submitRequest: function(data){
         console.log(data);
         return Promise.resolve();
@@ -98,7 +99,8 @@ form1.render(formData);
 ///////// Wizard Examples //////////////
 ///////////////////////////////////////
 
-let wizard = Template.select('#wizardExample', {
+let wizard = Template.selectFirst('#wizardExample');
+wizard.setOptions({
     submitRequest: function(data){
         console.log(data);
         return Promise.resolve();
@@ -116,8 +118,8 @@ wizard.render(formData);
 ////////// Popup Examples //////////////
 ///////////////////////////////////////
 
-let popup = Template.select('#popupExample');
-let popupButton = Template.select('#popupExampleButton');
+let popup = Template.selectFirst('#popupExample');
+let popupButton = Template.selectFirst('#popupExampleButton');
 popupButton.addEventListener('click', function(){
     popup.open();
 });
@@ -126,20 +128,20 @@ popupButton.addEventListener('click', function(){
 ////////// Status Examples /////////////
 ///////////////////////////////////////
 
-let status1 = Template.select('#statusExample1');
+let status1 = Template.selectFirst('#statusExample1');
 status1.renderSuccess("You did it!");
-let status2 = Template.select('#statusExample2');
+let status2 = Template.selectFirst('#statusExample2');
 status2.renderError("You failed!");
-let status3 = Template.select('#statusExample3');
+let status3 = Template.selectFirst('#statusExample3');
 status3.renderInfo("You're doing it!");
 
 /////////////////////////////////////////
 ////////// Feedack Examples ////////////
 ///////////////////////////////////////
 
-let feedback1 = Template.select('#feedbackExample1');
+let feedback1 = Template.selectFirst('#feedbackExample1');
 feedback1.renderSuccess("You did it!");
-let feedback2 = Template.select('#feedbackExample2');
+let feedback2 = Template.selectFirst('#feedbackExample2');
 feedback2.renderError("You failed!");
-let feedback3 = Template.select('#feedbackExample3');
+let feedback3 = Template.selectFirst('#feedbackExample3');
 feedback3.renderProcessing("You're doing it!");

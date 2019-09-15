@@ -159,15 +159,17 @@ class PagerTemplate extends Template {
             self.setPage(self.page - 1);
             self.emit("previous");
         });
+        let debounce = null;
         Template.on(this.elements.page, "input.pager", function(){
-            let value = parseInt(self.elements.page.value);
-            if(value && value <= self.pageCount){
-                self.page = value;
-                self.emit("page", self.page);
-            }
-            else {
-                self.elements.page.value = self.page;
-            }
+            clearTimeout(debounce);
+            debounce = setTimeout(function(){
+                let value = parseInt(self.elements.page.value);
+                if(value && value <= self.pageCount){
+                    self.page = value;
+                    self.emit("page", self.page);
+                }
+            }, 150);
+
         });
         return this;
     }

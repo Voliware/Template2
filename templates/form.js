@@ -30,7 +30,9 @@ class FormTemplate extends Template {
             useTemplate: true,
             elements: {
                 form: 'form',
-                footer: '.form-footer'
+                footer: '.form-footer',
+                reset: '[type="reset"]',
+                submit: '[type="submit"]'
             }
         };
         super(Object.extend(defaults, options));
@@ -58,10 +60,8 @@ class FormTemplate extends Template {
             self.submit();
         });
         this.elements.form.addEventListener('reset', function(event){
-            if(!Object.isEmpty(self.cachedData)){
-                event.preventDefault();
-                self.reload();
-            }
+            event.preventDefault();
+            self.reload();
         });
         return this;
     }
@@ -72,7 +72,14 @@ class FormTemplate extends Template {
     }
 
     reload(){
-        
+        console.log(this.cachedData)
+        if(!Object.isEmpty(this.cachedData)){
+            this.render(this.cachedData);
+        }
+        else {
+            this.reset();
+        }
+        return this;
     }
 
     validate(){
@@ -154,6 +161,11 @@ class FormTemplate extends Template {
             case 'radio':
                 if(input.checked){
                     val = input.value;
+                }
+                // need to return here to prevent
+                // empty radios from setting data
+                else {
+                    return null;
                 }
                 break;
             case 'file':

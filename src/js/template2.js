@@ -615,6 +615,7 @@ class Template extends HTMLElement {
         };
         this.options = Object.extend(defaults, options);
         this.eventSystem = new EventSystem();
+        this.nativeEvents = {};
         this.elements = {};
         this.cachedData = {};
         this.renderData = {};
@@ -688,8 +689,8 @@ class Template extends HTMLElement {
      * @param {HTMLElement} element 
      */
     static addEventSystem(element){
-       element._template_eventSystem = new EventSystem();
-       element._template_boundEvents = {};
+       element.eventSystem = new EventSystem();
+       element.nativeEvents = {};
     }
 
     /**
@@ -706,21 +707,34 @@ class Template extends HTMLElement {
         let baseEvent = event.split('.')[0];
 
         // if it doesn't have one, create an event system for this element
-        if(!element._template_eventSystem){
+        if(!element.eventSystem){
             Template.addEventSystem(element);
         }
 
         // add all base events, ie the "click" in "click.namespace",
         // to the elements native event listener. If the event does 
         // not actually exist natively, it will simply not fire.
-        if(element._template_eventSystem.getHandlersCount(baseEvent) === 0){
-            element._template_boundEvents[baseEvent] = function(e){
-                element._template_eventSystem.emit(baseEvent, e);
+        if(element.eventSystem.getHandlersCount(baseEvent) === 0){
+            element.nativeEvents[baseEvent] = function(e){
+                element.eventSystem.emit(baseEvent, e);
             };
-            element.addEventListener(baseEvent, element._template_boundEvents[baseEvent]);
+            element.addEventListener(baseEvent, element.nativeEvents[baseEvent]);
         }
 
-        element._template_eventSystem.on(event, callback);
+        element.eventSystem.on(event, callback);
+    }
+
+    /**
+     * Add an event handler. If this is a native
+     * DOM event, such as click, it will be added to
+     * and called by the native event system.
+     * @param {string} event 
+     * @param {function} callback 
+     * @return {Template}
+     */
+    on(event, callback) {
+        Template.on(this, event, callback);
+        return this;
     }
 
     /**
@@ -738,65 +752,19 @@ class Template extends HTMLElement {
         let baseEvent = event.split('.')[0];
 
         // if it doesn't have one, create an event system for this element
-        if(!element._template_eventSystem){
+        if(!element.eventSystem){
             Template.addEventSystem(element);
         }
 
-        if(element._template_eventSystem.getHandlersCount(baseEvent) === 0){
-            element._template_boundEvents[baseEvent] = function(e){
-                element._template_eventSystem.emit(baseEvent, e);
-                element.removeEventListener(baseEvent, element._template_boundEvents[baseEvent]);
+        if(element.eventSystem.getHandlersCount(baseEvent) === 0){
+            element.nativeEvents[baseEvent] = function(e){
+                element.eventSystem.emit(baseEvent, e);
+                element.removeEventListener(baseEvent, element.nativeEvents[baseEvent]);
             }
-            element.addEventListener(baseEvent, element._template_boundEvents[baseEvent]);
+            element.addEventListener(baseEvent, element.nativeEvents[baseEvent]);
         }
 
-        element._template_eventSystem.one(event, callback);
-    }
-
-    /**
-     * Remove an event. Also removes it from the native event system.
-     * If removeAllChildren is set to true, it will also remove any namespaced handlers.
-     * @param {HTMLElement} element 
-     * @param {string} event - an event such as click, or click.foo.bar
-     * @param {boolean} [removeAllChildHandlers=true] - whether to remove all child events
-     * @return {Template}
-     */
-    static off(element, event, removeAllChildHandlers = true){
-        if(!(element._template_eventSystem instanceof EventSystem)){
-            return;
-        }
-
-        let baseEvent = event.split('.')[0];
-        element._template_eventSystem.off(event, removeAllChildHandlers);
-        if(element._template_eventSystem.getHandlersCount(baseEvent) === 0){
-            element.removeEventListener(baseEvent, element._template_boundEvents[baseEvent]);
-        }
-    }
-
-    /**
-     * Emit an event.
-     * @param {HTMLElement} element 
-     * @param {string} event - an event such as click, or click.foo.bar
-     * @param {*} data - data to pass along with the event
-     * @return {EventSystem}
-     */
-    static emit(element, event, data){
-        if(element._template_eventSystem instanceof EventSystem){
-            element._template_eventSystem.emit(event, data);
-        }
-    }
-
-    /**
-     * Add an event handler. If this is a native
-     * DOM event, such as click, it will be added to
-     * and called by the native event system.
-     * @param {string} event 
-     * @param {function} callback 
-     * @return {Template}
-     */
-    on(event, callback) {
-        Template.on(this, event, callback);
-        return this;
+        element.eventSystem.one(event, callback);
     }
 
     /**
@@ -809,6 +777,26 @@ class Template extends HTMLElement {
         Template.one(this, event, callback);
         return this;
     }
+
+    /**
+     * Remove an event. Also removes it from the native event system.
+     * If removeAllChildren is set to true, it will also remove any namespaced handlers.
+     * @param {HTMLElement} element 
+     * @param {string} event - an event such as click, or click.foo.bar
+     * @param {boolean} [removeAllChildHandlers=true] - whether to remove all child events
+     * @return {Template}
+     */
+    static off(element, event, removeAllChildHandlers = true){
+        if(!(element.eventSystem instanceof EventSystem)){
+            return;
+        }
+
+        let baseEvent = event.split('.')[0];
+        element.eventSystem.off(event, removeAllChildHandlers);
+        if(element.eventSystem.getHandlersCount(baseEvent) === 0){
+            element.removeEventListener(baseEvent, element.nativeEvents[baseEvent]);
+        }
+    }
   
     /**
      * Remove an event. Also removes it from the native event system.
@@ -820,6 +808,19 @@ class Template extends HTMLElement {
     off(event, removeAllChildHandlers = true) {
         Template.off(this, event, removeAllChildHandlers);
         return this;
+    }
+
+    /**
+     * Emit an event.
+     * @param {HTMLElement} element 
+     * @param {string} event - an event such as click, or click.foo.bar
+     * @param {*} data - data to pass along with the event
+     * @return {EventSystem}
+     */
+    static emit(element, event, data){
+        if(element.eventSystem instanceof EventSystem){
+            element.eventSystem.emit(event, data);
+        }
     }
 
     /**
@@ -908,75 +909,78 @@ class Template extends HTMLElement {
     }
 
     /**
-     * Find the first matching child of the entire HTML document.
+     * Select the all matching child elements of another element.
+     * If no parent element is provided, searches through root node.
+     * @param {HTMLElement} element - HTMLElement to search through
      * @param {string} selector - any valid css selector
-     * @param {object} [options={}] - if element is a Template, options to set
-     * @return {HTMLElement|undefined}
+     * @return {HTMLElement}
      */
-    static select(selector, options = {}){
-        let element = document.documentElement.querySelectorAll(selector)[0];
-        if(element && element.setOptions){
-            element.setOptions(options);
+    static select(element, selector){
+        if(typeof element === "string"){
+            selector = element;
+            element = document.documentElement;
         }
-        return element;
-    }
-
-    /**
-     * Find the first matching child element of another element.
-     * @param {HTMLElement} element - HTMLElement to search through
-     * @param {string} selector - any valid css selector
-     * @return {HTMLElement|undefined}
-     */
-    static find(element, selector){
-        return element.querySelectorAll(selector)[0];
-    }
-
-    /**
-     * Find the first matching child element of another element.
-     * @param {string} selector - any valid css selector
-     * @return {HTMLElement|undefined}
-     */
-    find(selector){
-        return Template.find(this, selector);
-    }
-
-    /**
-     * Find all matching child elements of another element.
-     * @param {HTMLElement} element - HTMLElement to search through
-     * @param {string} selector - any valid css selector
-     * @return {HTMLElement|undefined}
-     */
-    static findAll(element, selector){
         return element.querySelectorAll(selector);
     }
 
     /**
-     * Find all matching child elements of another element.
+     * Select all matching child elements of the root element.
      * @param {string} selector - any valid css selector
-     * @return {HTMLElement|undefined}
+     * @return {HTMLElement}
      */
-    findAll(selector){
-        return Template.findAll(this, selector);
+    select(selector){
+        return Template.select(this, selector);
     }
-
+    
     /**
-     * Find the last matching child element of another element.
+     * Select the first matching child element of another element.
      * @param {HTMLElement} element - HTMLElement to search through
      * @param {string} selector - any valid css selector
-     * @return {HTMLElement|undefined}
+     * @return {HTMLElement}
      */
-    static findLast(element, selector){
-        let el = element.querySelectorAll(selector);
-        return el[el.length - 1];
+    static selectFirst(element, selector){
+        let elements = Template.select(element, selector);
+        if(elements instanceof NodeList){
+            return elements[0];
+        }
+        else {
+            return null;
+        }
     }
 
     /**
-     * Find the last matching child element of another element.
+     * Select the first matching child element of the root element.
      * @param {string} selector - any valid css selector
-     * @return {HTMLElement|undefined}
+     * @return {HTMLElement}
      */
-    findLast(selector){
-        return Template.findLast(selector);
+    selectFirst(selector){
+        return Template.selectFirst(this, selector);
+    }
+
+    /**
+     * Select the last matching child element of another element.
+     * If no parent element is provided, searches through root node.
+     * @param {HTMLElement} element - HTMLElement to search through
+     * @param {string} selector - any valid css selector
+     * @return {HTMLElement}
+     */
+    static selectLast(element, selector){
+        let elements = Template.select(element, selector);
+        if(elements instanceof NodeList){
+            return elements[element.length - 1];
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * Select the last matching child element of the root element.
+     * @param {string} selector - any valid css selector
+     * @return {HTMLElement}
+     */
+    selectLast(selector){
+        return Template.selectLast(selector);
     }
 
     /**
@@ -1490,8 +1494,10 @@ class Template extends HTMLElement {
                         if(type === 'checkbox' && value){
                             thisElement.checked = true;
                         }
-                        else if(type === 'radio' && thisElement.getAttribute('value') === value){
-                            thisElement.checked = true;
+                        else if(type === 'radio'){
+                            if(thisElement.getAttribute('value') === value){
+                                thisElement.checked = true;
+                            }
                         }
                         else {
                             thisElement.value = value;

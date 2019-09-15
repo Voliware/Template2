@@ -36,23 +36,22 @@ class EventSystem  {
         }
 
         let count = 0;
-        countHandlers(eventObject);
-        return count;
-
-        /**
-         * Recursively count all handlers
-         * @param {object} obj 
-         */
-        function countHandlers(obj){
-            for(let k in obj){
-                if(k === "_handlers"){
-                    count += obj[k].length;
+        let stack = [];
+        stack.push(eventObject);
+        while (stack.length > 0) {
+            let currentObj = stack.pop();   
+    
+            for (let k in currentObj) {
+                if (k === "_handlers") {
+                    count += currentObj[k].length;
                 }
-                else if(typeof obj[k] === 'object') {
-                    countHandlers(obj[k])
+                else if (typeof currentObj[k] === 'object') {
+                    stack.push(currentObj[k]);
                 }
             }
         }
+    
+        return count;
     }
 
     /**
@@ -142,32 +141,31 @@ class EventSystem  {
      */
     emit(event, data) {
         let eventArray = event.split('.');
-
         let lastObject = this.events;
         for (let i = 0; i < eventArray.length; i++) {
             let currentEventNamespace = eventArray[i];
-			lastObject = lastObject[currentEventNamespace];
-            if (i === eventArray.length - 1) {
-                _emit(lastObject, data);
-            } 
-        }
-
-        /**
-         * Recursively emit event handlers 
-         * through the handler tree.
-         * @param {object} obj 
-         * @param {*} data 
-         */
-        function _emit(obj, data) {
-            for (let k in obj) {
-                if (k === "_handlers") {
-                    for (let x = 0; x < obj[k].length; x++) {
-                        obj[k][x](data);
-                    }
-                } else {
-                    _emit(obj[k], data);
-                }
+            lastObject = lastObject[currentEventNamespace];
+            // event does not exist
+            if(!lastObject){
+                return this;
             }
+            
+            if (i === eventArray.length - 1) {
+                let stack = [];
+                stack.push(lastObject);
+                while(stack.length){
+                    let obj = stack.pop();   
+                    for (let k in obj) {
+                        if (k === "_handlers") {
+                            for (let x = 0; x < obj[k].length; x++) {
+                                obj[k][x](data);
+                            }
+                        } else {
+                            stack.push(obj[k]);
+                        }
+                    }
+                }
+            } 
         }
 
         return this;

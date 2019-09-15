@@ -1,5 +1,5 @@
 const Build = require('@voliware/node-build').Build;
-const version = "1.0.3";
+const version = "1.1.1";
 
 // base
 const jsBaseInput = [
