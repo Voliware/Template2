@@ -1,9 +1,14 @@
 const Build = require('@voliware/node-build').Build;
-const version = require('./package.json').version;
+const version = "1.1.1";
 
 // base
 const jsBaseInput = [
+    './src/js/object.js',
+    './src/js/string.js',
+    './src/js/document.js',
     './src/js/eventSystem.js',
+    './src/js/elementManager.js',
+    './src/js/status.js',
     './src/js/template2.js'
 ];
 const jsBaseOutput = './dist/template2.min.js';
@@ -17,6 +22,7 @@ const jsBaseConfig = {
 // bundle
 const jsBundleInput = [
     './src/js/eventSystem.js',
+    './src/js/elementManager.js',
     './src/js/template2.js',
     './templates/feedback.js',
     './templates/form.js',
