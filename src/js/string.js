@@ -1,7 +1,7 @@
 /**
  * Creates a random string of characters
  * @param {number} len - length of the string
- * @return {string}
+ * @returns {string}
  */
 String.random = function(len){
     var s = '';

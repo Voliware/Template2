@@ -21,7 +21,7 @@ class TableTemplate extends Template {
      * @param {string} [options.elements.tbody="tbody"] - the thead element selector
      * @param {string} [options.elements.tfoot="tfoot"] - the tfoot element selector
      * @param {string} [options.elements.tr="tr"] - the tbody row element selector
-     * @return {TableTemplate}
+     * @returns {TableTemplate}
      */
     constructor(options = {}){
         let defaults = {
@@ -62,7 +62,7 @@ class TableTemplate extends Template {
      * If the tbody does not exist, this
      * manager will exist only virtually
      * until it is appended somewhere.
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     createRowManager(){
         let wrapper = (this.elements && this.elements.tbody instanceof HTMLElement)
@@ -74,7 +74,7 @@ class TableTemplate extends Template {
     /**
      * Create HTML. In the very least,
      * we have a table and a tbody.
-     * @return {TableTemplate}
+     * @returns {TableTemplate}
      */
     createHtml(){
         this.innerHTML = '<table><tbody></tbody></table>';
@@ -86,7 +86,7 @@ class TableTemplate extends Template {
      * Essentially, pass the data to rowManager
      * who will take care of rendering the rows.
      * @param {object} data 
-     * @return {TableTemplate}
+     * @returns {TableTemplate}
      */
     render(data){
         this.cacheData(data);
@@ -110,7 +110,7 @@ class TableTemplate extends Template {
 
     /**
      * Empty the table tbody
-     * @return {TableTemplate}
+     * @returns {TableTemplate}
      */
     empty(){
         this.rowManager.empty();
@@ -121,7 +121,7 @@ class TableTemplate extends Template {
 
     /**
      * Create a header element
-     * @return {HTMLElement}
+     * @returns {HTMLElement}
      */
     createHeader(){
         return document.createElement('thead');
@@ -129,7 +129,7 @@ class TableTemplate extends Template {
 
     /**
      * Create a header column element
-     * @return {HTMLElement}
+     * @returns {HTMLElement}
      */
     createHeaderColumn(){
         return document.createElement('th');
@@ -138,7 +138,7 @@ class TableTemplate extends Template {
     /**
      * Add a header element
      * @param {HTMLElement} header
-     * @return {TableTemplate}
+     * @returns {TableTemplate}
      */
     addHeader(header){
         Template.prepend(header, this.elements.table);
@@ -151,7 +151,7 @@ class TableTemplate extends Template {
      * set in this.options.columns
      * @param {string[]} columnNames - a string array of column names
      * @param {string[]} [columnTitles] - a string array of column titles
-     * @return {TableTemplate}
+     * @returns {TableTemplate}
      */
     generateHeader(columnNames, columnTitles){
         this.elements.thead = this.createHeader();
@@ -170,7 +170,7 @@ class TableTemplate extends Template {
 
     /**
      * Create a row element
-     * @return {HTMLElement}
+     * @returns {HTMLElement}
      */
     createRow(){
         return document.createElement('tr');
@@ -178,7 +178,7 @@ class TableTemplate extends Template {
 
     /**
      * Create a row by cloning the tbody tr.
-     * @return {HTMLElement}
+     * @returns {HTMLElement}
      */
     cloneRow(){
         return this.elements.tr.cloneNode(true);
@@ -187,7 +187,7 @@ class TableTemplate extends Template {
     /**
      * Append a row to the tobdy.
      * @param {HTMLElement} row
-     * @return {TableTemplate}
+     * @returns {TableTemplate}
      */
     appendRow(row){
         this.elements.tbody.appendChild(row);
@@ -197,7 +197,7 @@ class TableTemplate extends Template {
     /**
      * Remove a row
      * @param {HTMLElement} row 
-     * @return {TableTemplate}
+     * @returns {TableTemplate}
      */
     removeRow(row){
 
@@ -209,7 +209,7 @@ class TableTemplate extends Template {
      * used to create a new row to add to the table.
      * Each column in this row has it's data-name attribute
      * set to the name of the column in this.options.columns.
-     * @return {TableTemplate}
+     * @returns {TableTemplate}
      */
     generateRow(){
         this.elements.tr = this.createRow();
@@ -226,7 +226,7 @@ class TableTemplate extends Template {
 
     /**
      * Create a column
-     * @return {HTMLElement}
+     * @returns {HTMLElement}
      */
     createColumn(){
         return document.createElement('td');
@@ -236,7 +236,7 @@ class TableTemplate extends Template {
      * Append a column to a row
      * @param {HTMLElement} row
      * @param {HTMLElement} column
-     * @return {TableTemplate}
+     * @returns {TableTemplate}
      */
     appendColumnToRow(row, column){
         row.appendChild(column);
@@ -248,7 +248,7 @@ class TableTemplate extends Template {
      * This walks through the extracted DOM object
      * and removes each element. Then, it resets
      * the DOM object to a blank object. 
-     * @return {TableTemplate}
+     * @returns {TableTemplate}
      */
     resetDom(){
         if(this.elements){
@@ -271,7 +271,7 @@ class TableTemplate extends Template {
      * @param {string[]} schema.columns
      * @param {string[]} [schema.columnTitles]
      * @param {string} [schema.primaryKey]
-     * @return {TableTemplate} 
+     * @returns {TableTemplate} 
      */
     setSchema(schema){
         this.options.columns = schema.columns;

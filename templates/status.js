@@ -15,7 +15,7 @@ class StatusTemplate extends Template {
     /**
      * Constructor
      * @param {object} [options={}]
-     * @return {StatusTemplate}
+     * @returns {StatusTemplate}
      */
     constructor(options){
         super(options);
@@ -25,7 +25,7 @@ class StatusTemplate extends Template {
     /**
      * Adds a "status" and "text" attribute
      * to the element if they do not exist.
-     * @return {StatusTemplate}
+     * @returns {StatusTemplate}
      */
     connectedCallback(){
         super.connectedCallback();
@@ -47,7 +47,7 @@ class StatusTemplate extends Template {
      * @param {string} name - attribute name
      * @param {string} oldValue - old value
      * @param {string} newValue - new value
-     * @return {FeedbackTemplate}
+     * @returns {FeedbackTemplate}
      */
     attributeChangedCallback(name, oldValue, newValue) {
         if(name === "status"){
@@ -65,7 +65,7 @@ class StatusTemplate extends Template {
     /**
      * Set the status
      * @param {string} status 
-     * @return {StatusTemplate}
+     * @returns {StatusTemplate}
      */
     setStatus(status){
         this.setAttribute('status', status);
@@ -74,7 +74,7 @@ class StatusTemplate extends Template {
 
     /**
      * Remove all status- classes
-     * @return {StatusTemplate}
+     * @returns {StatusTemplate}
      */
     clearStatusClass(){
         this.classList.remove(...Status.classArray);
@@ -84,7 +84,7 @@ class StatusTemplate extends Template {
     /**
      * Set the class
      * @param {string} clazz 
-     * @return {StatusTemplate}
+     * @returns {StatusTemplate}
      */
     setClass(clazz){
         this.clearStatusClass();
@@ -95,7 +95,7 @@ class StatusTemplate extends Template {
     /**
      * Set the text
      * @param {string} text 
-     * @return {StatusTemplate}
+     * @returns {StatusTemplate}
      */
     setText(text){
         this.textContent = text;
@@ -106,7 +106,7 @@ class StatusTemplate extends Template {
      * Render the StatusTemplate
      * @param {string} status 
      * @param {string} text 
-     * @return {StatusTemplate}
+     * @returns {StatusTemplate}
      */
     render(status, text){
         return this.setStatus(status).setText(text);
@@ -115,7 +115,7 @@ class StatusTemplate extends Template {
     /**
      * Render the StatusTemplate with no status
      * @param {string} text 
-     * @return {StatusTemplate}
+     * @returns {StatusTemplate}
      */
     renderNone(text){
         return this.render(Status.none, text);
@@ -124,7 +124,7 @@ class StatusTemplate extends Template {
     /**
      * Render the StatusTemplate with error status
      * @param {string} text 
-     * @return {StatusTemplate}
+     * @returns {StatusTemplate}
      */
     renderError(text){
         return this.render(Status.error, text);
@@ -133,7 +133,7 @@ class StatusTemplate extends Template {
     /**
      * Render the StatusTemplate with success status
      * @param {string} text 
-     * @return {StatusTemplate}
+     * @returns {StatusTemplate}
      */
     renderSuccess(text){
         return this.render(Status.success, text);
@@ -142,7 +142,7 @@ class StatusTemplate extends Template {
     /**
      * Render the StatusTemplate with info status
      * @param {string} text 
-     * @return {StatusTemplate}
+     * @returns {StatusTemplate}
      */
     renderInfo(text){
         return this.render(Status.info, text);
@@ -151,7 +151,7 @@ class StatusTemplate extends Template {
     /**
      * Render the StatusTemplate with warning status
      * @param {string} text 
-     * @return {StatusTemplate}
+     * @returns {StatusTemplate}
      */
     renderWarning(text){
         return this.render(Status.warning, text);

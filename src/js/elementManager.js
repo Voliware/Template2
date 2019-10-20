@@ -43,7 +43,7 @@ class ElementManager extends EventSystem {
      * @param {boolean} [options.removeDeadTemplates=true] - whether to remove dead 
      *                  templates. A template is dead when it does not exist 
      *                  in new data passed to render()
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     constructor(wrapper, template, options){
         super();
@@ -102,7 +102,7 @@ class ElementManager extends EventSystem {
     /**
      * Process data to be used for rendering.
      * @param {object} data 
-     * @return {object}
+     * @returns {object}
      */
     processRenderData(data){
         return data;
@@ -110,7 +110,7 @@ class ElementManager extends EventSystem {
     
     /**
      * Empty the contents of the template manager
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     empty(){
         while (this.wrapper.firstChild) {
@@ -123,7 +123,7 @@ class ElementManager extends EventSystem {
     /**
      * Attach handlers to an element
      * @param {HTLMElement} element 
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     attachElementHandlers(element){
         return this;
@@ -132,7 +132,7 @@ class ElementManager extends EventSystem {
     /**
      * Create a new clone of the template.
      * Attach handlers to it.
-     * @return {HTLMElement}
+     * @returns {HTLMElement}
      */
     cloneTemplate(){
         let element = this.template.cloneNode(true);
@@ -143,7 +143,7 @@ class ElementManager extends EventSystem {
     /**
      * Append an element to the wrapper
      * @param {HTLMElement} element 
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     appendElement(element){
         this.wrapper.appendChild(element);
@@ -154,7 +154,7 @@ class ElementManager extends EventSystem {
      * Append an element before an element
      * @param {HTLMElement} element 
      * @param {HTMLElement} elementTo
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     appendElementBefore(element, elementTo){
         elementTo.before(element);
@@ -165,7 +165,7 @@ class ElementManager extends EventSystem {
      * Append an element after an element
      * @param {HTLMElement} element 
      * @param {HTMLElement} elementTo
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     appendElementAfter(element, elementTo){
         elementTo.after(element);
@@ -176,7 +176,7 @@ class ElementManager extends EventSystem {
      * Remove an element by id.
      * Removes from the DOM and collection.
      * @param {string} id 
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     removeElement(id){
         let element = this.elements.get(id);
@@ -199,7 +199,7 @@ class ElementManager extends EventSystem {
      *          // user1 is missing in the data. Therefore, the template named
      *          // "user1" is no longer relevant, and is removed.
      * @param {object} data
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     removeDeadElements(data){
         for(let [key, element] of this.elements){
@@ -214,7 +214,7 @@ class ElementManager extends EventSystem {
     /**
      * Get the type of the data parameter.
      * @param {object[]|object|Map} data 
-     * @return {string}
+     * @returns {string}
      */
     getDataType(data){
         if(data instanceof Map){
@@ -239,7 +239,7 @@ class ElementManager extends EventSystem {
      * todo: rename.. to something better
      * @param {object[]|object|Map} data 
      * @param {string} key 
-     * @return {null|object}
+     * @returns {null|object}
      */
     getData(data, key){
         switch(this.getDataType(data)){
@@ -262,7 +262,7 @@ class ElementManager extends EventSystem {
      * into an element. If the data is new, the
      * element will be appended to the wrapper.
      * @param {object[]|object|Map} data 
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     render(data){
         this.cachedData = this.cacheData(data);
@@ -289,7 +289,7 @@ class ElementManager extends EventSystem {
      * Render elements from an array of data.
      * Each object must have an "id" property.
      * @param {object[]} data 
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     renderArray(data){
         for(let i = 0; i < data.length; i++){
@@ -306,7 +306,7 @@ class ElementManager extends EventSystem {
     /**
      * Render elements from a map of objects.
      * @param {Map} data 
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     renderMap(data){
         let i = 0;
@@ -320,7 +320,7 @@ class ElementManager extends EventSystem {
     /**
      * Render elements from an object of objects.
      * @param {object} data 
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     renderObject(data){
         let i = 0;
@@ -339,7 +339,7 @@ class ElementManager extends EventSystem {
      * remove all other elements.
      * @param {string} id 
      * @param {object} object 
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     renderSingle(id, object){
         let obj = {};
@@ -354,7 +354,7 @@ class ElementManager extends EventSystem {
      * @param {number|string} id - element and data identifier
      * @param {object} data - object of data
      * @param {number} index - the numerical index of the element
-     * @return {ElementManager}
+     * @returns {ElementManager}
      */
     renderElement(id, data, index){
         let isNew =  false;
@@ -386,7 +386,7 @@ class ElementManager extends EventSystem {
      * array must have a primary key.
      * @param {object[]} dataArr 
      * @param {string} [primaryKey="id"] - the key that identifies each data object
-     * @return {object}
+     * @returns {object}
      */
     static dataArrayToDataObject(dataArr, primaryKey = 'id'){
         let dataObj = {};

@@ -7,7 +7,7 @@ class WizardTemplate extends FormTemplate {
     /**
      * Constructor
      * @param {object} options 
-     * @return {WizardTemplate}
+     * @returns {WizardTemplate}
      */
     constructor(options){
         let defaults = {
@@ -43,7 +43,7 @@ class WizardTemplate extends FormTemplate {
     /**
      * Determine if a tab index is valid.
      * @param {number} index 
-     * @return {boolean} true if it is, false otherwise
+     * @returns {boolean} true if it is, false otherwise
      */
     isValidTabIndex(index){
         return index > -1 && index < this.tabCount;
@@ -53,7 +53,7 @@ class WizardTemplate extends FormTemplate {
      * Show or hide a tab by its index.
      * @param {number} tabIndex - tab index
      * @param {boolean} state - true to show, false to hide
-     * @return {WizardTemplate}
+     * @returns {WizardTemplate}
      */
     displayTab(tabIndex, state){
         if(this.isValidTabIndex(tabIndex)){
@@ -65,7 +65,7 @@ class WizardTemplate extends FormTemplate {
 
     /**
      * Hide all tabs.
-     * @return {WizardTemplate}
+     * @returns {WizardTemplate}
      */
     hideTabs(){
         for(let i = 0; i < this.tabCount; i++){
@@ -77,7 +77,7 @@ class WizardTemplate extends FormTemplate {
     /**
      * Go to a tab based on its index.
      * @param {number} tabIndex 
-     * @return {WizardTemplate}
+     * @returns {WizardTemplate}
      */
     goToTab(tabIndex){
         if(this.isValidTabIndex(tabIndex)){
@@ -91,7 +91,7 @@ class WizardTemplate extends FormTemplate {
 
     /**
      * Go to the first tab.
-     * @return {WizardTemplate}
+     * @returns {WizardTemplate}
      */
     goToFirstTab(){
         this.goToTab(0);
@@ -100,7 +100,7 @@ class WizardTemplate extends FormTemplate {
 
     /**
      * Go to the last tab.
-     * @return {WizardTemplate}
+     * @returns {WizardTemplate}
      */
     goToLastTab(){
         this.goToTab(this.tabCount - 1);
@@ -109,7 +109,7 @@ class WizardTemplate extends FormTemplate {
 
     /**
      * Go to the next tab.
-     * @return {WizardTemplate}
+     * @returns {WizardTemplate}
      */
     goToNextTab(){
         if(this.tab < this.tabCount - 1){
@@ -121,7 +121,7 @@ class WizardTemplate extends FormTemplate {
 
     /**
      * Go to the previous tab.
-     * @return {WizardTemplate}
+     * @returns {WizardTemplate}
      */
     goToPreviousTab(){
         if(this.tab > 0){
@@ -133,7 +133,7 @@ class WizardTemplate extends FormTemplate {
 
     /**
      * Attach handlers to the pager.
-     * @return {WizardTemplate}
+     * @returns {WizardTemplate}
      */
     attachPagerHanders(){
         let self = this;
@@ -150,7 +150,7 @@ class WizardTemplate extends FormTemplate {
 
     /**
      * Attach handlers to the navs.
-     * @return {WizardTemplate}
+     * @returns {WizardTemplate}
      */
     attachNavHandlers(){
         let self = this;
@@ -165,7 +165,7 @@ class WizardTemplate extends FormTemplate {
 
     /**
      * Render the pager.
-     * @return {WizardTemplate}
+     * @returns {WizardTemplate}
      */
     renderPager(){
         this.elements.pager.setPage(this.tab + 1);
@@ -175,7 +175,7 @@ class WizardTemplate extends FormTemplate {
 
     /**
      * Validate a tab by index.
-     * @return {WizardTemplate}
+     * @returns {WizardTemplate}
      */
     validateTab(tabIndex){
         if(this.isValidTabIndex(tabIndex)){

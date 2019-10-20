@@ -11,7 +11,7 @@ class PagerTemplate extends Template {
     /**
      * Constructor
      * @param {object} options 
-     * @return {PagerTemplate}
+     * @returns {PagerTemplate}
      */
     constructor(options){
         super(options);
@@ -33,7 +33,7 @@ class PagerTemplate extends Template {
      * Set the current page count.
      * Render the pager.
      * @param {number} pageCount 
-     * @return {PagerTemplate}
+     * @returns {PagerTemplate}
      */
     setPageCount(pageCount){
         this.pageCount = pageCount;
@@ -45,7 +45,7 @@ class PagerTemplate extends Template {
      * Set the current page.
      * Render the pager.
      * @param {number} pageCount 
-     * @return {PagerTemplate}
+     * @returns {PagerTemplate}
      */
     setPage(page){
         this.page = page;
@@ -58,7 +58,7 @@ class PagerTemplate extends Template {
      * If no data is passed, used the 
      * internal properties.
      * @param {object} [data={}] 
-     * @return {PagerTemplate}
+     * @returns {PagerTemplate}
      */
     render(data = {}){
         if(typeof data.pageCount === "undefined"){
@@ -92,7 +92,7 @@ class PagerTemplate extends Template {
     /**
      * Show or hide the next button.
      * @param {boolean} state - true to show, false to hide
-     * @return {PagerTemplate}
+     * @returns {PagerTemplate}
      */
     displayNextButton(state){
         Template.display(this.elements.next, state);
@@ -102,7 +102,7 @@ class PagerTemplate extends Template {
     /**
      * Show or hide the previous button.
      * @param {boolean} state - true to show, false to hide
-     * @return {PagerTemplate}
+     * @returns {PagerTemplate}
      */
     displayPreviousButton(){
         Template.display(this.elements.previous, state);
@@ -111,7 +111,7 @@ class PagerTemplate extends Template {
 
     /**
      * Enable the next button.
-     * @return {PagerTemplate}
+     * @returns {PagerTemplate}
      */
     enableNextButton(){
         Template.enable(this.elements.next);
@@ -120,7 +120,7 @@ class PagerTemplate extends Template {
 
     /**
      * Disable the next button.
-     * @return {PagerTemplate}
+     * @returns {PagerTemplate}
      */
     disableNextButton(){
         Template.disable(this.elements.next);
@@ -129,7 +129,7 @@ class PagerTemplate extends Template {
 
     /**
      * Enable the previous button.
-     * @return {PagerTemplate}
+     * @returns {PagerTemplate}
      */
     enablePreviousButton(){
         Template.enable(this.elements.previous);
@@ -138,7 +138,7 @@ class PagerTemplate extends Template {
 
     /**
      * Disable the previous button.
-     * @return {PagerTemplate}
+     * @returns {PagerTemplate}
      */
     disablePreviousButton(){
         Template.disable(this.elements.previous);
@@ -147,7 +147,7 @@ class PagerTemplate extends Template {
 
     /**
      * Attach button handlers
-     * @return {PagerTemplate}
+     * @returns {PagerTemplate}
      */
     attachButtonHandlers(){
         let self = this;

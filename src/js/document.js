@@ -1,7 +1,7 @@
 /**
  * Get a set of matching elements by data-name attribute
  * @param {string} dataname - the data-name attribute value
- * @return {HTMLElement[]}
+ * @returns {HTMLElement[]}
  */
 document.getElementsByDataName = function(dataName){
     return document.querySelectorAll(`[data-name="${dataName}"]`);
@@ -10,7 +10,7 @@ document.getElementsByDataName = function(dataName){
 /**
  * Get the first matching element by data-name attribute
  * @param {string} dataname - the data-name attribute value
- * @return {HTMLElement}
+ * @returns {HTMLElement}
  */
 document.getElementByDataName = function(dataName){
     let elements = document.getElementsByDataName(dataName);

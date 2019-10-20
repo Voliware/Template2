@@ -13,11 +13,10 @@ class FormTemplate extends Template {
      * @param {number} [options.checkboxMode]
      * @param {number} [options.serializeMode]
      * @param {string[]} [options.excludedFields=["disabled"]]
-     * @param {boolean} [options.useTemplate=true]
      * @param {object} [options.elements]
      * @param {string} [options.elements.form="form"]
      * @param {string} [options.elements.footer=".form-footer"]
-     * @return {FormTemplate}
+     * @returns {FormTemplate}
      */
     constructor(options = {}){
         let defaults = {
@@ -27,7 +26,6 @@ class FormTemplate extends Template {
 			checkboxMode: FormTemplate.checkboxMode.number,
             serializeMode: FormTemplate.serializeMode.toObject,
             excludedFields: ['disabled'],
-            useTemplate: true,
             elements: {
                 form: 'form',
                 footer: '.form-footer',
@@ -51,7 +49,7 @@ class FormTemplate extends Template {
 
     /**
      * Attach handlers to the default form events.
-     * @return {FormTemplate}
+     * @returns {FormTemplate}
      */
     attachFormHandlers(){
         let self = this;
@@ -66,11 +64,20 @@ class FormTemplate extends Template {
         return this;
     }
 
+    /**
+     * Toggle the display of the footer.
+     * @param {boolean} state
+     * @returns {FormTemplate}
+     */
     displayFooter(state){
         Template.display(this.elements.footer, state);
         return this;
     }
 
+    /**
+     * Reload the form.
+     * @returns {FormTemplate}
+     */
     reload(){
         console.log(this.cachedData)
         if(!Object.isEmpty(this.cachedData)){
@@ -82,16 +89,19 @@ class FormTemplate extends Template {
         return this;
     }
 
+    /**
+     * Validate the form.
+     * @returns {boolean}
+     */
     validate(){
-
+        return true;
     }
 
     /**
-     * Convert a checkbox into a boolean,
-     * string, or number.
+     * Convert a checkbox into a boolean, string, or number.
      * @param {HTMLElement} checkbox 
      * @param {number} mode 
-     * @return {boolean|string|number}
+     * @returns {boolean|string|number}
      */
     convertCheckbox(checkbox, mode){
 		let checked = checkbox.checked
@@ -111,7 +121,7 @@ class FormTemplate extends Template {
     /**
      * Determine if a field is not excluded
      * @param {string} field 
-     * @return {FormTemplate}
+     * @returns {FormTemplate}
      */
     isNotExcluded(field){
         for(let i = 0; i < this.options.excludedFields.length; i++){
@@ -127,7 +137,7 @@ class FormTemplate extends Template {
 
     /**
      * Serialize the form 
-     * @return {object}
+     * @returns {object}
      */
     serialize(){
         this.serializedData = {};
@@ -148,7 +158,7 @@ class FormTemplate extends Template {
     /**
      * Serialize an input
      * @param {HTMLElement} input 
-     * @return {object}
+     * @returns {object}
      */
     serializeInput(input){
         let name = input.getAttribute('name');
@@ -187,7 +197,7 @@ class FormTemplate extends Template {
     /**
      * Serialize a textarea
      * @param {HTMLElement} input 
-     * @return {object}
+     * @returns {object}
      */
     serializeTextarea(textarea){
         return this.serializeSelect(textarea);        
@@ -196,7 +206,7 @@ class FormTemplate extends Template {
     /**
      * Serialize a select
      * @param {HTMLElement} input 
-     * @return {object}
+     * @returns {object}
      */
     serializeSelect(select){
         let name = select.getAttribute('name');
@@ -208,7 +218,7 @@ class FormTemplate extends Template {
      * into a string or an object
      * @param {object} data 
      * @param {number} mode
-     * @return {string|object}
+     * @returns {string|object}
      */
     formatSerializedData(data, mode){
 		switch(mode){
@@ -224,7 +234,7 @@ class FormTemplate extends Template {
     /**
      * Serialize data into a string
      * @param {object} data 
-     * @return {string}
+     * @returns {string}
      */
 	serializedDataToString(data){
 		let str = "";
@@ -243,19 +253,23 @@ class FormTemplate extends Template {
      * Submit the form.
      * Serialize data and pass the data
      * to the submitRequest function.
-     * @return {Promise}
+     * @returns {Promise}
      */
-    submit(){
-        let self = this;
+    async submit(){
         this.serializedData = this.serialize();
         this.formattedSerializedData = this.formatSerializedData(this.serializedData, this.options.serializeMode);
-        return this.options.submitRequest(this.formattedSerializedData)
-            .then(function(data){
-                self.emit('success', data);
-            })
-            .catch(function(err){
-                self.emit('fail', err);
-            });
+        try {
+            let response = await this.options.submitRequest(this.formattedSerializedData)
+            if(response.status === 200){
+                this.emit('success', response.body);
+            }
+            else {
+                this.emit('fail', response.body);
+            }
+        }
+        catch(error){
+            this.emit('error', error);
+        }
     }
 }
 FormTemplate.checkboxMode = {

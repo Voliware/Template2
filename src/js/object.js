@@ -4,7 +4,7 @@
  * matching properties.
  * @param {object} obj - the object to alter
  * @param {object} data - an object of data
- * @return {object} the original object
+ * @returns {object} the original object
  */
 Object.setProperties = function(obj, data){
     for(let k in data){
@@ -18,7 +18,7 @@ Object.setProperties = function(obj, data){
 /**
  * Check if an object is empty
  * @param {object} obj - the object to check
- * @return {boolean}
+ * @returns {boolean}
  */
 Object.isEmpty = function(obj){
     return !Object.keys(obj).length;
@@ -26,7 +26,7 @@ Object.isEmpty = function(obj){
 
 /**
  * Extends an object into another
- * @return {object}
+ * @returns {object}
  * @example
  * let o = Object.extend({}, {a:1}, {a:2, b:3});
  * console.log(o); // {a:2, b:3};
@@ -51,7 +51,7 @@ Object.extend = function(){
  * Flatten a nested object into a more simple object.
  * https://tinyurl.com/y6oe2ebq
  * @param {object} obj
- * @return {object}
+ * @returns {object}
  * @example 
  * Object.flatten({a: {b: 1, c: 2}}); // {"a.b": 1, "a.c": 2}
  */
@@ -77,7 +77,7 @@ Object.flatten = function(obj){
  * Unflatten an object into a nested object
  * https://tinyurl.com/y536fqrf
  * @param {object} obj
- * @return {object}
+ * @returns {object}
  * @example
  * Object.unflatten({"a.b": 1, "a.c": 2}); // {a: {b: 1, c: 2}}
  */

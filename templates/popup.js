@@ -16,7 +16,7 @@ class PopupTemplate extends Template {
      * @param {string} [options.elements.close=".template-popupcloseBtn"]
      * @param {string} [options.elements.body=".popup-body"]
      * @param {string} [options.elements.footer=".popup-footer"]
-     * @return {PopupTemplate}
+     * @returns {PopupTemplate}
      */
     constructor(options = {}){
         let defaults = {
@@ -47,7 +47,7 @@ class PopupTemplate extends Template {
 
     /**
      * Attach button handlers
-     * @return {PopupTemplate}
+     * @returns {PopupTemplate}
      */
     attachButtonHandlers(){
         let self = this;
@@ -60,7 +60,7 @@ class PopupTemplate extends Template {
     /**
      * Apply options to the PopupTemplate
      * @param {object} options 
-     * @return {PopupTemplate}
+     * @returns {PopupTemplate}
      */
     applyOptions(options){
         if(!options.showHeader && this.elements.header){
@@ -78,7 +78,7 @@ class PopupTemplate extends Template {
     /**
      * Open the popup by adding the 'popup-open' class.
      * Fade in the PopupTemplate.
-     * @return {PopupTemplate}
+     * @returns {PopupTemplate}
      */
     open(){
         document.body.classList.add('popup-open');
@@ -89,7 +89,7 @@ class PopupTemplate extends Template {
     /**
      * Close the popup by removing the 'popup-open' class
      * Fadeout in the PopupTemplate.
-     * @return {PopupTemplate}
+     * @returns {PopupTemplate}
      */
     close(){
         document.body.classList.remove('popup-open');
@@ -100,7 +100,7 @@ class PopupTemplate extends Template {
     /**
      * Render the title
      * @param {string} html 
-     * @return {PopupTemplate}
+     * @returns {PopupTemplate}
      */
     renderTitle(html){
         this.elements.title.innerHTML = html;
@@ -110,7 +110,7 @@ class PopupTemplate extends Template {
     /**
      * Render the body
      * @param {string} html 
-     * @return {PopupTemplate}
+     * @returns {PopupTemplate}
      */
     renderBody(html){
         this.elements.body.innerHTML = html;
@@ -120,7 +120,7 @@ class PopupTemplate extends Template {
     /**
      * Render the footer
      * @param {string} html 
-     * @return {PopupTemplate}
+     * @returns {PopupTemplate}
      */
     renderFooter(html){
         this.elements.footer.innerHTML = html;

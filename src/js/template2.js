@@ -28,7 +28,7 @@ class Template extends HTMLElement {
      *                  each child element to match data in render() with
      * @param {boolean} [options.displayBlock=true] - whether to add the 
      *                  'template-block' class to the template on connectedCallback()
-     * @return {Template}
+     * @returns {Template}
      */
     constructor(options = {}){
         super();
@@ -84,7 +84,7 @@ class Template extends HTMLElement {
 
     /**
      * Attach handlers to template elements.
-     * @return {Template}
+     * @returns {Template}
      */
     attachHandlers(){
         return this;
@@ -93,7 +93,7 @@ class Template extends HTMLElement {
     /**
      * Set Template options
      * @param {object} options 
-     * @return {Template}
+     * @returns {Template}
      */
     setOptions(options){
         for(let k in options){
@@ -154,7 +154,7 @@ class Template extends HTMLElement {
      * and called by the native event system.
      * @param {string} event 
      * @param {function} callback 
-     * @return {Template}
+     * @returns {Template}
      */
     on(event, callback) {
         Template.on(this, event, callback);
@@ -195,7 +195,7 @@ class Template extends HTMLElement {
      * Add an event handler that firwa once.
      * @param {string} event 
      * @param {function} callback 
-     * @return {Template}
+     * @returns {Template}
      */
     one(event, callback) {
         Template.one(this, event, callback);
@@ -208,7 +208,7 @@ class Template extends HTMLElement {
      * @param {HTMLElement} element 
      * @param {string} event - an event such as click, or click.foo.bar
      * @param {boolean} [removeAllChildHandlers=true] - whether to remove all child events
-     * @return {Template}
+     * @returns {Template}
      */
     static off(element, event, removeAllChildHandlers = true){
         if(!(element.eventSystem instanceof EventSystem)){
@@ -227,7 +227,7 @@ class Template extends HTMLElement {
      * If removeAllChildren is set to true, it will also remove any namespaced handlers.
      * @param {string} event - an event such as click, or click.foo.bar
      * @param {boolean} [removeAllChildHandlers=true] - whether to remove all child events
-     * @return {Template}
+     * @returns {Template}
      */
     off(event, removeAllChildHandlers = true) {
         Template.off(this, event, removeAllChildHandlers);
@@ -239,7 +239,7 @@ class Template extends HTMLElement {
      * @param {HTMLElement} element 
      * @param {string} event - an event such as click, or click.foo.bar
      * @param {*} data - data to pass along with the event
-     * @return {EventSystem}
+     * @returns {EventSystem}
      */
     static emit(element, event, data){
         if(element.eventSystem instanceof EventSystem){
@@ -251,7 +251,7 @@ class Template extends HTMLElement {
      * Emit an event.
      * @param {string} event - an event such as click, or click.foo.bar
      * @param {*} data - data to pass along with the event
-     * @return {EventSystem}
+     * @returns {EventSystem}
      */
     emit(event, data){
         Template.emit(this, event, data);
@@ -261,7 +261,7 @@ class Template extends HTMLElement {
     /**
      * Set attributes from a NamedNodeMap
      * @param {NamedNodeMap} attributes 
-     * @return {Template}
+     * @returns {Template}
      */
     setAttributes(attributes){
         for(let i = 0; i < attributes.length; i++){
@@ -277,7 +277,7 @@ class Template extends HTMLElement {
 
     /**
      * Find and register elements into the elements object.
-     * @return {object}
+     * @returns {object}
      */
     findElements(elements){
         for(let k in elements){
@@ -289,7 +289,7 @@ class Template extends HTMLElement {
     /**
      * Find all elements that have name or data-name attributes.
      * @param {HTMLElement} element - HTMLElement to search through
-     * @return {object}
+     * @returns {object}
      */
     static findNamedElements(element){
         let elements = {};
@@ -316,7 +316,7 @@ class Template extends HTMLElement {
 
     /**
      * Find all elements that have name or data-name attributes.
-     * @return {Template}
+     * @returns {Template}
      */
     findNamedElements(){
         let elements = Template.findNamedElements(this);
@@ -326,7 +326,7 @@ class Template extends HTMLElement {
 
     /**
      * Get registered child elements of the Template.
-     * @return {object}
+     * @returns {object}
      */
     getElements(){
         return this.elements;
@@ -337,7 +337,7 @@ class Template extends HTMLElement {
      * If no parent element is provided, searches through root node.
      * @param {HTMLElement} element - HTMLElement to search through
      * @param {string} selector - any valid css selector
-     * @return {HTMLElement}
+     * @returns {HTMLElement}
      */
     static select(element, selector){
         if(typeof element === "string"){
@@ -350,7 +350,7 @@ class Template extends HTMLElement {
     /**
      * Select all matching child elements of the root element.
      * @param {string} selector - any valid css selector
-     * @return {HTMLElement}
+     * @returns {HTMLElement}
      */
     select(selector){
         return Template.select(this, selector);
@@ -360,7 +360,7 @@ class Template extends HTMLElement {
      * Select the first matching child element of another element.
      * @param {HTMLElement} element - HTMLElement to search through
      * @param {string} selector - any valid css selector
-     * @return {HTMLElement}
+     * @returns {HTMLElement}
      */
     static selectFirst(element, selector){
         let elements = Template.select(element, selector);
@@ -375,7 +375,7 @@ class Template extends HTMLElement {
     /**
      * Select the first matching child element of the root element.
      * @param {string} selector - any valid css selector
-     * @return {HTMLElement}
+     * @returns {HTMLElement}
      */
     selectFirst(selector){
         return Template.selectFirst(this, selector);
@@ -386,7 +386,7 @@ class Template extends HTMLElement {
      * If no parent element is provided, searches through root node.
      * @param {HTMLElement} element - HTMLElement to search through
      * @param {string} selector - any valid css selector
-     * @return {HTMLElement}
+     * @returns {HTMLElement}
      */
     static selectLast(element, selector){
         let elements = Template.select(element, selector);
@@ -401,7 +401,7 @@ class Template extends HTMLElement {
     /**
      * Select the last matching child element of the root element.
      * @param {string} selector - any valid css selector
-     * @return {HTMLElement}
+     * @returns {HTMLElement}
      */
     selectLast(selector){
         return Template.selectLast(selector);
@@ -411,7 +411,7 @@ class Template extends HTMLElement {
      * Append one element to another element
      * @param {HTMLElement} element - the element to append
      * @param {HTMLElement} toElement - the element to append to
-     * @return {Template}
+     * @returns {Template}
      */
     static append(element, toElement){
         toElement.appendChild(element);
@@ -420,7 +420,7 @@ class Template extends HTMLElement {
     /**
      * Append an element 
      * @param {HTMLElement} element 
-     * @return {Template}
+     * @returns {Template}
      */
     append(element){
         Template.append(element, this);
@@ -430,7 +430,7 @@ class Template extends HTMLElement {
     /**
      * Append to another element
      * @param {HTMLElement} element 
-     * @return {Template}
+     * @returns {Template}
      */
     appendTo(element){
         Template.append(this, element);
@@ -449,7 +449,7 @@ class Template extends HTMLElement {
     /**
      * Prepend another element
      * @param {HTMLElement} element 
-     * @return {Template}
+     * @returns {Template}
      */
     prepend(element){
         Template.prepend(element, this);
@@ -459,7 +459,7 @@ class Template extends HTMLElement {
     /**
      * Prepend to another element
      * @param {HTMLElement} element 
-     * @return {Template}
+     * @returns {Template}
      */
     prependTo(element){
         Template.prepend(this, element);
@@ -478,7 +478,7 @@ class Template extends HTMLElement {
 
     /**
      * Empty the contents of the Template
-     * @return {Template}
+     * @returns {Template}
      */
     empty(){
         Template.empty(this);
@@ -492,7 +492,7 @@ class Template extends HTMLElement {
     /**
      * Determine if an element is visible
      * @param {HTMLElemet} element 
-     * @return {boolean}
+     * @returns {boolean}
      */
     static isVisible(element){
         // taken from jquery
@@ -501,7 +501,7 @@ class Template extends HTMLElement {
 
     /**
      * Determine if the Template is visible
-     * @return {boolean}
+     * @returns {boolean}
      */
     isVisible(){
         return Template.isVisible(this);
@@ -520,7 +520,7 @@ class Template extends HTMLElement {
 
     /**
      * Hide the Template
-     * @return {Template}
+     * @returns {Template}
      */
     hide(){
         Template.hide(this);
@@ -537,7 +537,7 @@ class Template extends HTMLElement {
 
     /**
      * Show the Template 
-     * @return {Template}
+     * @returns {Template}
      */
     show(){
         Template.show(this);
@@ -561,7 +561,7 @@ class Template extends HTMLElement {
      * Toggle the display of the Template by 
      * adding or removing the hidden class
      * @param {boolean} state 
-     * @return {Template}
+     * @returns {Template}
      */
     display(state){
         Template.display(this, state);
@@ -574,7 +574,7 @@ class Template extends HTMLElement {
      * Get the value of a style of an element
      * @param {HTMLElement} element 
      * @param {string} style - style such as opacity, height, etc
-     * @return {string}
+     * @returns {string}
      */
     static getStyle(element, style){
         return window.getComputedStyle(element).getPropertyValue(style);
@@ -583,7 +583,7 @@ class Template extends HTMLElement {
     /**
      * Get the value of a style of the Template
      * @param {string} style - style such as opacity, height, etc
-     * @return {string}
+     * @returns {string}
      */
     getStyle(style){
         return Template.getStyle(this, style);
@@ -605,7 +605,7 @@ class Template extends HTMLElement {
     /**
      * Set the height of the Template
      * @param {number} height 
-     * @return {Template}
+     * @returns {Template}
      */
     setHeight(height){
         Template.setHeight(this, height);
@@ -624,7 +624,7 @@ class Template extends HTMLElement {
     /**
      * Set the width of the Template
      * @param {number} width 
-     * @return {Template}
+     * @returns {Template}
      */
     setWidth(width){
         Template.setWidth(this, width);
@@ -647,7 +647,7 @@ class Template extends HTMLElement {
     /**
      * Add a class to the Template
      * @param {string} clazz 
-     * @return {Template}
+     * @returns {Template}
      */
     addClass(clazz){
         Template.addClass(this, clazz);
@@ -658,7 +658,7 @@ class Template extends HTMLElement {
      * Determine if an element has a class
      * @param {HTMLElement} element 
      * @param {string} clazz 
-     * @return {boolean}
+     * @returns {boolean}
      */
     static hasClass(element, clazz){
         return element.classList.contains(clazz);
@@ -667,7 +667,7 @@ class Template extends HTMLElement {
     /**
      * Determine if the Template has a class
      * @param {string} clazz 
-     * @return {boolean}
+     * @returns {boolean}
      */
     hasClass(clazz){
         return Template.hasClass(this, clazz);
@@ -685,7 +685,7 @@ class Template extends HTMLElement {
     /**
      * Remove a class from the Template
      * @param {string} clazz 
-     * @return {Template}
+     * @returns {Template}
      */
     removeClass(clazz){
         Template.removeClass(this, clazz);
@@ -706,7 +706,7 @@ class Template extends HTMLElement {
      * Replace a class of the Template with another
      * @param {string} oldClass - class to replace
      * @param {string} newClass - class to add
-     * @return {Template}
+     * @returns {Template}
      */
     replaceClass(oldClass, newClass){
         Template.replaceClass(this, oldClass, newClass);
@@ -731,7 +731,7 @@ class Template extends HTMLElement {
      * class state to its opposite
      * @param {string} clazz 
      * @param {boolean} [state]
-     * @return {Template}
+     * @returns {Template}
      */
     toggleClass(clazz, state){
         Template.toggleClass(this, clazz, state);
@@ -745,7 +745,7 @@ class Template extends HTMLElement {
     /**
      * Get the value of an element
      * @param {HTMLElement} element
-     * @return {string} 
+     * @returns {string} 
      */
     static getValue(element){
         return element.value;
@@ -753,7 +753,7 @@ class Template extends HTMLElement {
 
     /**
      * Get the value of the template
-     * @return {string} 
+     * @returns {string} 
      */
     getValue(){
         return Template.getValue(this);
@@ -771,7 +771,7 @@ class Template extends HTMLElement {
     /**
      * Set the value of the template
      * @param {string} 
-     * @return {Template}
+     * @returns {Template}
      */
     setValue(value){
         Template.setValue(this, value);
@@ -794,7 +794,7 @@ class Template extends HTMLElement {
     /**
      * Set the Template to enabled by
      * setting the disabled state to false.
-     * @return {Template}
+     * @returns {Template}
      */
     enable(){
         Template.enable(this);
@@ -811,7 +811,7 @@ class Template extends HTMLElement {
 
     /**
      * Set the Template to disabled.
-     * @return {Template}
+     * @returns {Template}
      */
     disable(){
         Template.disable(this);
@@ -826,7 +826,7 @@ class Template extends HTMLElement {
      * Cache data as-is in case the 
      * original data is required.
      * @param {object} data 
-     * @return {object}
+     * @returns {object}
      */
     cacheData(data){
         return this.cachedData = Object.extend({}, data);
@@ -835,7 +835,7 @@ class Template extends HTMLElement {
     /**
      * Process data to be used for rendering.
      * @param {object} data 
-     * @return {object}
+     * @returns {object}
      */
     processRenderData(data){
         return this.renderData = data;
@@ -942,7 +942,7 @@ class Template extends HTMLElement {
      * Render the Template.
      * Cache and process the render data.
      * @param {object} data 
-     * @return {Template}
+     * @returns {Template}
      */
     render(data){
         this.cachedData = this.cacheData(data);

@@ -16,7 +16,7 @@ class EventSystem  {
 
     /**
      * Constructor
-     * @return {EventSystem}
+     * @returns {EventSystem}
      */
     constructor(){
         this.events = {};
@@ -27,7 +27,7 @@ class EventSystem  {
      * Get the number of handlers for an event.
      * Will look through all namespaced events as well.
      * @param {string} event 
-     * @return {number}
+     * @returns {number}
      */
     getHandlersCount(event){
         let eventObject = this.events[event];
@@ -59,7 +59,7 @@ class EventSystem  {
      * Supports namespace handling.
      * @param {string} event - an event such as click, or click.foo.bar
      * @param {function} callback - a function to run when the event is emitted
-     * @return {EventSystem}
+     * @returns {EventSystem}
      */
     on(event, callback) {
         let eventArray = event.split('.');
@@ -87,7 +87,7 @@ class EventSystem  {
      * Attach and event that only runs once.
      * @param {string} event - an event such as click, or click.foo.bar
      * @param {function} callback - a function to run when the event is emitted
-     * @return {EventSystem}
+     * @returns {EventSystem}
      */
     one(event, callback) {
         let self = this;
@@ -105,7 +105,7 @@ class EventSystem  {
      * If removeAllChildren is set to true, it will also remove any namespaced handlers.
      * @param {string} event - an event such as click, or click.foo.bar
      * @param {boolean} [removeAllChildHandlers=true] - whether to remove all child events
-     * @return {EventSystem}
+     * @returns {EventSystem}
      */
     off(event, removeAllChildHandlers = true) {
         let eventArray = event.split('.');
@@ -137,7 +137,7 @@ class EventSystem  {
      * This will emit all namespaced child events.
      * @param {string} event - an event such as click, or click.foo.bar
      * @param {*} data - data to pass along with the event
-     * @return {EventSystem}
+     * @returns {EventSystem}
      */
     emit(event, data) {
         let eventArray = event.split('.');

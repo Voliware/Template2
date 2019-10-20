@@ -11,7 +11,7 @@ class FeedbackTemplate extends Template {
      * @param {string} [options.elements.icon=".feedback-icon"]
      * @param {string} [options.elements.text=".feedback-text"]
      * @param {string} [options.elements.close=".feedback-close"]
-     * @return {FeedbackTemplate}
+     * @returns {FeedbackTemplate}
      */
     constructor(options = {}){
         let defaults = {
@@ -35,19 +35,19 @@ class FeedbackTemplate extends Template {
 
     /**
      * Attach button handlers
-     * @return {FeedbackTemplate}
+     * @returns {FeedbackTemplate}
      */
     attachButtonHandlers(){
         let self = this;
         this.elements.close.addEventListener('click', function(){
-            self.remove();
+            self.hide();
         });
         return this;
     }
 
     /**
      * Set the innerHTML to the default layout
-     * @return {FeedbackTemplate}
+     * @returns {FeedbackTemplate}
      */
     createHtml(){
         this.innerHTML = `
@@ -64,7 +64,7 @@ class FeedbackTemplate extends Template {
      * @param {string} name - attribute name
      * @param {string} oldValue - old value
      * @param {string} newValue - new value
-     * @return {FeedbackTemplate}
+     * @returns {FeedbackTemplate}
      */
     attributeChangedCallback(name, oldValue, newValue) {
         if(name === "status"){
@@ -84,7 +84,7 @@ class FeedbackTemplate extends Template {
     /**
      * Set the status attribute
      * @param {string} status 
-     * @return {FeedbackTemplate}
+     * @returns {FeedbackTemplate}
      */
     setStatus(status){
         this.setAttribute('status', status);
@@ -93,7 +93,7 @@ class FeedbackTemplate extends Template {
 
     /**
      * Remove all status- based classes
-     * @return {FeedbackTemplate}     
+     * @returns {FeedbackTemplate}     
      */
     clearStatusClass(){
         this.classList.remove(...Status.bgclassArray);
@@ -103,7 +103,7 @@ class FeedbackTemplate extends Template {
     /**
      * Set the class
      * @param {string} clazz
-     * @return {FeedbackTemplate}
+     * @returns {FeedbackTemplate}
      */
     setClass(clazz){
         this.clearStatusClass();
@@ -114,7 +114,7 @@ class FeedbackTemplate extends Template {
     /**
      * Set the text 
      * @param {string} text
-     * @return {FeedbackTemplate}     
+     * @returns {FeedbackTemplate}     
      */
     setText(text){
         this.elements.text.textContent = text;
@@ -124,7 +124,7 @@ class FeedbackTemplate extends Template {
     /**
      * Set the icon 
      * @param {string} text
-     * @return {FeedbackTemplate}     
+     * @returns {FeedbackTemplate}     
      */
     setIcon(icon){
         this.elements.icon.innerHTML = icon;
@@ -136,7 +136,7 @@ class FeedbackTemplate extends Template {
      * @param {string} status 
      * @param {string} text 
      * @param {string} icon 
-     * @return {FeedbackTemplate}
+     * @returns {FeedbackTemplate}
      */
     render(status, text, icon){
         return this.setStatus(status).setText(text).setIcon(icon);
@@ -145,7 +145,7 @@ class FeedbackTemplate extends Template {
     /**
      * Render an error feedback
      * @param {string} message 
-     * @return {FeedbackTemplate}
+     * @returns {FeedbackTemplate}
      */
     renderError(message){
         return this.render(Status.error, message, Status.icon[Status.error]);
@@ -154,7 +154,7 @@ class FeedbackTemplate extends Template {
     /**
      * Render an info feedback
      * @param {string} message 
-     * @return {FeedbackTemplate}
+     * @returns {FeedbackTemplate}
      */
     renderInfo(message){
         return this.render(Status.info, message, Status.icon[Status.error]);
@@ -163,7 +163,7 @@ class FeedbackTemplate extends Template {
     /**
      * Render a processing feedback
      * @param {string} message 
-     * @return {FeedbackTemplate}
+     * @returns {FeedbackTemplate}
      */
     renderProcessing(message){
         return this.render(Status.processing, message, Status.icon[Status.processing]);
@@ -172,7 +172,7 @@ class FeedbackTemplate extends Template {
     /**
      * Render a success feedback
      * @param {string} message 
-     * @return {FeedbackTemplate}
+     * @returns {FeedbackTemplate}
      */
     renderSuccess(message){
         return this.render(Status.success, message, Status.icon[Status.success]);
@@ -181,7 +181,7 @@ class FeedbackTemplate extends Template {
     /**
      * Render a warning feedback
      * @param {string} message 
-     * @return {FeedbackTemplate}
+     * @returns {FeedbackTemplate}
      */
     renderWarning(message){
         return this.render(Status.warning, message, Status.icon[Status.warning]);
