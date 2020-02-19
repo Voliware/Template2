@@ -9,25 +9,24 @@ class TableTemplate extends Template {
      * Constructor
      * @param {object} [options={}] 
      * @param {boolean} [options.alwaysRebuild=false] - whether to always wipe
-     * and then rebuild the table
-     * @param {string[]} [options.columns=[]] - array of column names, required for a
-     * table that is not defined first in HTML
-     * @param {string[]} [options.columnTitles=[]] - array of column titles, optional if
-     * you want the header to display a different title for each column instead of its name
-     * @param {object} [options.elements] - the table elements
+     * and then rebuild the table@param {object} [options.elements] - the table elements
      * @param {string} [options.elements.table="table"] - the table element selector
      * @param {string} [options.elements.thead="thead"] - the thead element selector
      * @param {string} [options.elements.theadTr="theadTr"] - the thead row element selector
      * @param {string} [options.elements.tbody="tbody"] - the thead element selector
      * @param {string} [options.elements.tfoot="tfoot"] - the tfoot element selector
      * @param {string} [options.elements.tr="tr"] - the tbody row element selector
+     * @param {object} [optinos.schema={}]
+     * @param {string} [options.schema.primaryKey="id"] - the table's primary key
+     * @param {string[]} [options.schema.columns=[]] - array of column names, required for a
+     * table that is not defined first in HTML
+     * @param {string[]} [options.schema.columnTitles=[]] - array of column titles, optional if
+     * you want the header to display a different title for each column instead of its name
      * @returns {TableTemplate}
      */
     constructor(options = {}){
         let defaults = {
             alwaysRebuild: false,
-            columns: [],
-            columnTitles: [],
             elements: {
                 table: 'table',
                 thead: 'thead',
@@ -35,10 +34,14 @@ class TableTemplate extends Template {
                 tbody: 'tbody',
                 tfoot: 'tfoot',
                 tr: 'tbody > tr'
+            },
+            schema: {
+                primaryKey: 'id',
+                columns: [],
+                columnTitles: []
             }
         };
         super(Object.extend(defaults, options));
-        this.schema = {};
         this.rowManager = null;
         return this;
     }
@@ -213,9 +216,9 @@ class TableTemplate extends Template {
      */
     generateRow(){
         this.elements.tr = this.createRow();
-        for(let i = 0; i < this.options.columns.length; i++){
+        for(let i = 0; i < this.options.schema.columns.length; i++){
             let col = this.createColumn();
-            col.setAttribute("data-name", this.options.columns[i]);
+            col.setAttribute("data-name", this.options.schema.columns[i]);
             this.elements.tr.appendChild(col);
         }
         this.elements.tbody.appendChild(this.elements.tr);
@@ -274,18 +277,12 @@ class TableTemplate extends Template {
      * @returns {TableTemplate} 
      */
     setSchema(schema){
-        this.options.columns = schema.columns;
-        if(schema.columnTitles){
-            this.options.columnTitles = schema.columnTitles;
-        }
-        if(schema.primaryKey){
-            this.options.primaryKey = schema.primaryKey;
-        }
+        this.options.schema = schema;
         this.resetDom();
         this.createHtml();
         this.findNamedElements();
         this.findElements(this.options.elements);
-        this.generateHeader(this.options.columns, this.options.columnTitles);
+        this.generateHeader(this.options.schema.columns, this.options.schema.columnTitles);
         this.generateRow();
         return this;
     }

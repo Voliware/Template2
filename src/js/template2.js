@@ -44,28 +44,7 @@ class Template extends HTMLElement {
         this.cachedData = {};
         this.renderData = {};
         this.isFirstRender = true;
-        this.observer = new MutationObserver(this.mutationObserverCallback.bind(this));
-
-        this.findNamedElements();
-        this.findElements(this.options.elements);
-
         return this;
-    }
-
-    /**
-     * 
-     * @param {} mutations 
-     * @param {*} observer 
-     */
-    mutationObserverCallback(mutations, observer){
-        mutations.forEach((mutation) => {
-            switch(mutation.type) {
-                case 'childList':
-                case 'subtree':
-                    console.debug("Mutated");
-                    return;
-            }
-        });
     }
 
     /**
@@ -79,6 +58,8 @@ class Template extends HTMLElement {
         if(this.options.displayBlock){
             this.classList.add('template-block');
         }
+        this.findNamedElements();
+        this.findElements(this.options.elements);
         this.attachHandlers();
     }
 
@@ -277,13 +258,27 @@ class Template extends HTMLElement {
 
     /**
      * Find and register elements into the elements object.
+     * @param {HTMLElement} element 
+     * @param {object} elements - elements to find
+     * @returns {object}
+     */
+    static findElements(element, elements){
+        if(typeof element.elements !== "object"){
+            element.elements = {};
+        }
+        for(let k in elements){
+            element.elements[k] = element.querySelector(elements[k]);
+        }
+        return element.elements;
+    }
+
+    /**
+     * Find and register elements into the elements object.
+     * @param {object} elements - elements to find
      * @returns {object}
      */
     findElements(elements){
-        for(let k in elements){
-            this.elements[k] = this.querySelector(elements[k]);
-        }
-        return this.elements;
+        return Template.findElements(this, elements);
     }
 
     /**
@@ -513,7 +508,7 @@ class Template extends HTMLElement {
      */
     static hide(element){
         if(element.style.display !== "none"){
-            element.previousDisplay = element.style.display;
+            element._previousDisplay_ = element.style.display;
         }
         element.style.display = "none";
     }
@@ -532,7 +527,7 @@ class Template extends HTMLElement {
      * @param {HTMLElemet} element 
      */
     static show(element){
-        element.style.display = element.previousDisplay || "block";
+        element.style.display = element._previousDisplay_ || "block";
     }
 
     /**
@@ -890,23 +885,35 @@ class Template extends HTMLElement {
         let _data = Object.flatten(data);
         for(let k in _data){
             let value = _data[k];
-            let element = elements[k];
+            let htmlElement = elements[k];
 
-            if(!element){
-                continue;
+            // did not find the element
+            if(!htmlElement){
+                // if its a template, can do a quick regather named elements
+                if(isTemplate){
+                    element.findNamedElements();
+                    htmlElement = elements[k];
+                }
+                // still did not find it, continue
+                if(!htmlElement){
+                    continue;
+                }
             }
             
-            if(element.render){
-                element.render(value);
+            // if the element has a render function, use that 
+            if(htmlElement.render){
+                htmlElement.render(value);
                 continue;
             }
 
-            if(!Array.isArray(element)){
-                element = [element];
+            // if only a single element was found, put it into an array
+            if(!Array.isArray(htmlElement)){
+                htmlElement = [htmlElement];
             }
 
-            for(let i = 0; i < element.length; i++){
-                let thisElement = element[i];
+            // loop through all found elements and render them
+            for(let i = 0; i < htmlElement.length; i++){
+                let thisElement = htmlElement[i];
 
                 if(thisElement.getAttribute('data-render') === "false"){
                     continue;
@@ -947,14 +954,28 @@ class Template extends HTMLElement {
     render(data){
         this.cachedData = this.cacheData(data);
         this.renderData = this.processRenderData(Object.extend({}, data));
-        this.observer.observe(this, {
-            childList: true,
-            subtree: true
-        });
         Template.render(this, this.renderData, true);
-        this.observer.disconnect();
         this.isFirstRender = false;
         return this;
+    }
+
+    /**
+     * Clone an HTMLElement including its inner html.
+     * @param {HTMLElement} element 
+     * @returns {HTMLElement}
+     */
+    static clone(element){
+        let clone = element.cloneNode();
+        clone.innerHTML = element.innerHTML;
+        return clone;
+    }
+
+    /**
+     * Clone the Template including its inner html.
+     * @returns {HTMLElement}
+     */
+    clone(){
+        return Template.clone(this);
     }
 }
 customElements.define('template-element', Template);
