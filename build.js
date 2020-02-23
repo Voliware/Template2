@@ -16,7 +16,8 @@ const jsBaseConfig = {
     name: "Template JS [base]",
     version: version,
     input: jsBaseInput,
-    output: jsBaseOutput
+    output: jsBaseOutput,
+    minify: true
 };
 
 // bundle
@@ -41,7 +42,8 @@ const jsBundleConfig = {
     name: "Template JS [bundle]",
     version: version,
     input: jsBundleInput,
-    output: jsBundleOutput
+    output: jsBundleOutput,
+    minify: true
 };
 
 // css
@@ -51,7 +53,8 @@ const cssConfig = {
     name: "Template CSS",
     version: version,
     input: cssInput,
-    output: cssOutput
+    output: cssOutput,
+    minify: true
 };
 
 // build
