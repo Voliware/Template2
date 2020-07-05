@@ -23,11 +23,11 @@ class Template extends HTMLElement {
      * Constructor
      * @param {object} [options={}]
      * @param {object} [options.elements={}] - a collection of element selectors
-     *                  to capture child elements of the Template
+     * to capture child elements of the Template
      * @param {string} [options.renderAttribute="data-name"] - the attribute of
-     *                  each child element to match data in render() with
+     * each child element to match data in render() with
      * @param {boolean} [options.displayBlock=true] - whether to add the 
-     *                  'template-block' class to the template on connectedCallback()
+     * 'template-block' class to the template on connectedCallback()
      * @returns {Template}
      */
     constructor(options = {}){
@@ -834,6 +834,25 @@ class Template extends HTMLElement {
      */
     processRenderData(data){
         return this.renderData = data;
+    }
+
+    /**
+     * Set the inner HTML of an element
+     * @param {HTMLElement} element - the element to set the HTML of
+     * @param {String|HTMLElement} html - the HTML to set in the element
+     */
+    static setHtml(element, html){
+        element.innerHTML = html;
+    }
+
+    /**
+     * Set the inner HTML of the template
+     * @param {String|HTMLElement} html
+     * @returns {Template}
+     */
+    setHtml(html){
+        Template.setHtml(this, html);
+        return this;
     }
 
     /**
