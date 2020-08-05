@@ -362,6 +362,7 @@ class ElementManager extends EventSystem {
         if(!element){
             isNew = true;
             element = this.cloneTemplate();
+            this.appendElement(element);             
         }
         
         if(element){
@@ -372,8 +373,7 @@ class ElementManager extends EventSystem {
                 Template.render(element, data);
             }  
             if(isNew){
-                this.elements.set(id, element);
-                this.appendElement(element);              
+                this.elements.set(id, element); 
             }
         }
 

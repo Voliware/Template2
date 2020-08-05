@@ -9,7 +9,8 @@ class TableTemplate extends Template {
      * Constructor
      * @param {object} [options={}] 
      * @param {boolean} [options.alwaysRebuild=false] - whether to always wipe
-     * and then rebuild the table@param {object} [options.elements] - the table elements
+     * and then rebuild the table
+     * @param {object} [options.elements] - the table elements
      * @param {string} [options.elements.table="table"] - the table element selector
      * @param {string} [options.elements.thead="thead"] - the thead element selector
      * @param {string} [options.elements.theadTr="theadTr"] - the thead row element selector

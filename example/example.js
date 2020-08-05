@@ -145,3 +145,19 @@ let feedback2 = Template.selectFirst('#feedbackExample2');
 feedback2.renderError("You failed!");
 let feedback3 = Template.selectFirst('#feedbackExample3');
 feedback3.renderProcessing("You're doing it!");
+
+//////////////////////////////////////////////////
+////////// ElementManager Examples //////////////
+//////////////////////////////////////////////////
+
+class TestTemplate extends Template {
+}
+customElements.define('template-test', TestTemplate);
+
+let element_manager_wrapper = Template.selectFirst('#elementManagerExample');
+let element_manager_template = Template.selectFirst('#elementManagerTemplate')
+let element_manager = new ElementManager(element_manager_wrapper, element_manager_template);
+element_manager.render({
+    0: {text: "Entry 0"},
+    1: {text: "Entry 1"}
+});
