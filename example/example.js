@@ -40,20 +40,8 @@ let tableData2 = [
 // table captured from DOM
 let table1 = Template.selectFirst("#tableExample");
 table1.render(tableData1);
-
-// table that does not exist in DOM
-// must have columns defined to match the tableData1
-let table2 = document.createElement('template-table');
-table2.setSchema({
-    primaryKey: "id",
-    columns: ["column1", "column2", "column3"],
-    // optional, if you want the header to have different names
-    columnTitles: ["Column Uno", "Column Dos", "Column Tres"]
-});
-table2.appendTo(Template.selectFirst('#tableExampleNoHtml'));
-table2.render(tableData1);
 setTimeout(function(){
-    table2.render(tableData2);
+    table1.render(tableData2);
 }, 1000);
 
 /////////////////////////////////////////
@@ -159,5 +147,6 @@ let element_manager_template = Template.selectFirst('#elementManagerTemplate')
 let element_manager = new ElementManager(element_manager_wrapper, element_manager_template);
 element_manager.render({
     0: {text: "Entry 0"},
-    1: {text: "Entry 1"}
+    1: {text: "Entry 1"},
+    2: {text: "Entry 2"}
 });

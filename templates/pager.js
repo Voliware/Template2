@@ -17,15 +17,6 @@ class PagerTemplate extends Template {
         super(options);
         this.page = 1;
         this.pageCount = 1;
-        return this;
-    }
-
-    /**
-     * Connected callback.
-     * Attach button handlers.
-     */
-    connectedCallback(){
-        super.connectedCallback();
         this.attachButtonHandlers();
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "@voliware/template2",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "a tiny client-side library for rendering and generating HTML",
   "main": "build.js",
   "directories": {

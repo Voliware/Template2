@@ -32,19 +32,32 @@ Object.isEmpty = function(obj){
  * console.log(o); // {a:2, b:3};
  */
 Object.extend = function(){
-    for(let i = 1; i < arguments.length; i++) {
-        for(let key in arguments[i]) {
-            if(arguments[i].hasOwnProperty(key)) { 
-                if (typeof arguments[0][key] === 'object' && typeof arguments[i][key] === 'object') {
-                    Object.extend(arguments[0][key], arguments[i][key]);
-                }
-                else {
-                    arguments[0][key] = arguments[i][key];
+    let target = arguments[0];
+    if(target){
+        for(let i = 1; i < arguments.length; i++) {
+            let arg = arguments[i];
+            if(typeof arg !== "object"){
+                continue;
+            }
+
+            for(let key in arg) {
+                if(arg.hasOwnProperty(key)) { 
+                    let item = arg[key];
+                    if(typeof item === "undefined"){
+                        continue;
+                    }
+
+                    if (typeof target[key] === 'object' && typeof item === 'object' && target[key] !== item){
+                        Object.extend(target[key], item);
+                    }
+                    else {
+                        target[key] = item;
+                    }
                 }
             }
         }
     }
-    return arguments[0];	
+    return target;	
 }
 
 /**

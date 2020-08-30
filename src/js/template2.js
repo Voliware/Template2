@@ -27,8 +27,7 @@ class Template extends HTMLElement {
      * @param {string} [options.renderAttribute="data-name"] - the attribute of
      * each child element to match data in render() with
      * @param {boolean} [options.displayBlock=true] - whether to add the 
-     * 'template-block' class to the template on connectedCallback()
-     * @returns {Template}
+     * 'template-block' class to the template 
      */
     constructor(options = {}){
         super();
@@ -44,37 +43,16 @@ class Template extends HTMLElement {
         this.cachedData = {};
         this.renderData = {};
         this.isFirstRender = true;
-        return this;
-    }
-
-    /**
-     * This callback is fired when the element is appended
-     * to the DOM, or when it is loaded if it's already there.
-     * This is where HTML can be modified, and attributes
-     * can be modified. That cannot happen in the constructor.
-     */
-    connectedCallback(){
-        // by default, templates have no display
+        this.findNamedElements();
+        this.findElements(this.options.elements);
         if(this.options.displayBlock){
             this.classList.add('template-block');
         }
-        this.findNamedElements();
-        this.findElements(this.options.elements);
-        this.attachHandlers();
-    }
-
-    /**
-     * Attach handlers to template elements.
-     * @returns {Template}
-     */
-    attachHandlers(){
-        return this;
     }
         
     /**
      * Set Template options
      * @param {object} options 
-     * @returns {Template}
      */
     setOptions(options){
         for(let k in options){
@@ -82,7 +60,6 @@ class Template extends HTMLElement {
                 this.options[k] = options[k];
             }
         }
-        return this;
     }
         
     ////////////////////////////////////////////
@@ -288,11 +265,11 @@ class Template extends HTMLElement {
      */
     static findNamedElements(element){
         let elements = {};
-        let found = element.querySelectorAll('[name], [data-name]');
+        let found = element.querySelectorAll(`[name], [${this.options.renderAttribute}]`);
         for(let i = 0; i < found.length; i++){
             let name = found[i].getAttribute('name');
             if(!name){
-                name = found[i].getAttribute('data-name');
+                name = found[i].getAttribute(this.options.renderAttribute);
             }
             if(name){
                 if(elements[name]){
@@ -311,12 +288,11 @@ class Template extends HTMLElement {
 
     /**
      * Find all elements that have name or data-name attributes.
-     * @returns {Template}
      */
     findNamedElements(){
+        // @todo STOP THIS from finding elements of other templates
         let elements = Template.findNamedElements(this);
         Object.extend(this.elements, elements);
-        return this;
     }
 
     /**
@@ -952,6 +928,9 @@ class Template extends HTMLElement {
                         else {
                             thisElement.value = value;
                         }
+                    }
+                    else {
+                        thisElement.value = value;
                     }
                 }
                 else if (thisElement.tagName === "SELECT"){

@@ -16,7 +16,6 @@ class PopupTemplate extends Template {
      * @param {string} [options.elements.close=".template-popupcloseBtn"]
      * @param {string} [options.elements.body=".popup-body"]
      * @param {string} [options.elements.footer=".popup-footer"]
-     * @returns {PopupTemplate}
      */
     constructor(options = {}){
         let defaults = {
@@ -33,34 +32,23 @@ class PopupTemplate extends Template {
             }
         }
         super(Object.extend(defaults, options));
-        return this;
-    }
-
-    /**
-     * Connected callback
-     */
-    connectedCallback(){
-        super.connectedCallback();
         this.applyOptions(this.options);
         this.attachButtonHandlers();
     }
 
     /**
      * Attach button handlers
-     * @returns {PopupTemplate}
      */
     attachButtonHandlers(){
         let self = this;
         this.elements.close.addEventListener('click', function(e){
             self.close();
         });
-        return this;
     }
 
     /**
      * Apply options to the PopupTemplate
      * @param {object} options 
-     * @returns {PopupTemplate}
      */
     applyOptions(options){
         if(!options.showHeader && this.elements.header){
@@ -72,59 +60,48 @@ class PopupTemplate extends Template {
         if(!options.showFooter && this.elements.footer){
             this.elements.footer.remove();
         }
-        return this;
     }
 
     /**
      * Open the popup by adding the 'popup-open' class.
      * Fade in the PopupTemplate.
-     * @returns {PopupTemplate}
      */
     open(){
         document.body.classList.add('popup-open');
         this.show();
-        return this;
     }
 
     /**
      * Close the popup by removing the 'popup-open' class
      * Fadeout in the PopupTemplate.
-     * @returns {PopupTemplate}
      */
     close(){
         document.body.classList.remove('popup-open');
         this.hide();
-        return this;
     }
 
     /**
      * Render the title
      * @param {string} html 
-     * @returns {PopupTemplate}
      */
     renderTitle(html){
         this.elements.title.innerHTML = html;
-        return this;
     }
 
     /**
      * Render the body
      * @param {string} html 
-     * @returns {PopupTemplate}
      */
     renderBody(html){
         this.elements.body.innerHTML = html;
-        return this;
     }
 
     /**
      * Render the footer
      * @param {string} html 
-     * @returns {PopupTemplate}
      */
     renderFooter(html){
         this.elements.footer.innerHTML = html;
-        return this;
     }
 }
 customElements.define('template-popup', PopupTemplate);

@@ -6,10 +6,9 @@ class WizardTemplate extends FormTemplate {
 
     /**
      * Constructor
-     * @param {object} options 
-     * @returns {WizardTemplate}
+     * @param {object} [options] 
      */
-    constructor(options){
+    constructor(options = {}){
         let defaults = {
             elements: {
 				navs: '.wizard-navs',
@@ -20,18 +19,6 @@ class WizardTemplate extends FormTemplate {
         super(Object.extend(defaults, options));
         this.tabCount = 0;
         this.tab = 0;
-        return this;
-    }
-
-    /**
-     * Connected callback.
-     * Count the tabs.
-     * Set up the pager.
-     * Attach handlers.
-     * Go to the first tab.
-     */
-    connectedCallback(){
-        super.connectedCallback();
         this.tabCount = this.elements.tabs.children.length;
         this.elements.pager.setPage(1);
         this.elements.pager.setPageCount(this.tabCount);
@@ -53,31 +40,26 @@ class WizardTemplate extends FormTemplate {
      * Show or hide a tab by its index.
      * @param {number} tabIndex - tab index
      * @param {boolean} state - true to show, false to hide
-     * @returns {WizardTemplate}
      */
     displayTab(tabIndex, state){
         if(this.isValidTabIndex(tabIndex)){
             let tab = this.elements.tabs.children[tabIndex];
             Template.display(tab, state);
         }
-        return this;
     }
 
     /**
      * Hide all tabs.
-     * @returns {WizardTemplate}
      */
     hideTabs(){
         for(let i = 0; i < this.tabCount; i++){
             this.displayTab(i, false);
         }
-        return this;
     }
 
     /**
      * Go to a tab based on its index.
      * @param {number} tabIndex 
-     * @returns {WizardTemplate}
      */
     goToTab(tabIndex){
         if(this.isValidTabIndex(tabIndex)){
@@ -86,54 +68,44 @@ class WizardTemplate extends FormTemplate {
             this.tab = tabIndex;
             this.elements.pager.setPage(tabIndex + 1);
         }
-        return this;
     }
 
     /**
      * Go to the first tab.
-     * @returns {WizardTemplate}
      */
     goToFirstTab(){
         this.goToTab(0);
-        return this;
     }
 
     /**
      * Go to the last tab.
-     * @returns {WizardTemplate}
      */
     goToLastTab(){
         this.goToTab(this.tabCount - 1);
-        return this;
     }
 
     /**
      * Go to the next tab.
-     * @returns {WizardTemplate}
      */
     goToNextTab(){
         if(this.tab < this.tabCount - 1){
             this.tab++;
             this.goToTab(this.tab);
         }
-        return this;
     }
 
     /**
      * Go to the previous tab.
-     * @returns {WizardTemplate}
      */
     goToPreviousTab(){
         if(this.tab > 0){
             this.tab--;
             this.goToTab(this.tab);
         }
-        return this;
     }
 
     /**
      * Attach handlers to the pager.
-     * @returns {WizardTemplate}
      */
     attachPagerHanders(){
         let self = this;
@@ -150,7 +122,6 @@ class WizardTemplate extends FormTemplate {
 
     /**
      * Attach handlers to the navs.
-     * @returns {WizardTemplate}
      */
     attachNavHandlers(){
         let self = this;
@@ -160,27 +131,22 @@ class WizardTemplate extends FormTemplate {
                 self.goToTab(i);
             });
         }
-        return this;
     }
 
     /**
      * Render the pager.
-     * @returns {WizardTemplate}
      */
     renderPager(){
         this.elements.pager.setPage(this.tab + 1);
         this.elements.pager.setPageCount(this.tabCount);
-        return this;
     }
 
     /**
      * Validate a tab by index.
-     * @returns {WizardTemplate}
      */
     validateTab(tabIndex){
         if(this.isValidTabIndex(tabIndex)){
         }
-        return this;
     }
 }
 customElements.define('template-wizard', WizardTemplate);

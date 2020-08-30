@@ -16,7 +16,6 @@ class FormTemplate extends Template {
      * @param {object} [options.elements]
      * @param {string} [options.elements.form="form"]
      * @param {string} [options.elements.footer=".form-footer"]
-     * @returns {FormTemplate}
      */
     constructor(options = {}){
         let defaults = {
@@ -36,20 +35,11 @@ class FormTemplate extends Template {
         super(Object.extend(defaults, options));
         this.serializedData = {};
         this.formattedSerializedData = null;
-        return this;
-    }
-
-    /**
-     * Connected callback
-     */
-    connectedCallback(){
-        super.connectedCallback();
         this.attachFormHandlers();
     }
 
     /**
      * Attach handlers to the default form events.
-     * @returns {FormTemplate}
      */
     attachFormHandlers(){
         let self = this;
@@ -61,32 +51,26 @@ class FormTemplate extends Template {
             event.preventDefault();
             self.reload();
         });
-        return this;
     }
 
     /**
      * Toggle the display of the footer.
      * @param {boolean} state
-     * @returns {FormTemplate}
      */
     displayFooter(state){
         Template.display(this.elements.footer, state);
-        return this;
     }
 
     /**
      * Reload the form.
-     * @returns {FormTemplate}
      */
     reload(){
-        console.log(this.cachedData)
         if(!Object.isEmpty(this.cachedData)){
             this.render(this.cachedData);
         }
         else {
             this.reset();
         }
-        return this;
     }
 
     /**
@@ -121,7 +105,7 @@ class FormTemplate extends Template {
     /**
      * Determine if a field is not excluded
      * @param {string} field 
-     * @returns {FormTemplate}
+     * @returns {boolean}
      */
     isNotExcluded(field){
         for(let i = 0; i < this.options.excludedFields.length; i++){
