@@ -263,13 +263,13 @@ class Template extends HTMLElement {
      * @param {HTMLElement} element - HTMLElement to search through
      * @returns {object}
      */
-    static findNamedElements(element){
+    static findNamedElements(element, selector = 'data-name'){
         let elements = {};
-        let found = element.querySelectorAll(`[name], [${this.options.renderAttribute}]`);
+        let found = element.querySelectorAll(`[name], [${selector}]`);
         for(let i = 0; i < found.length; i++){
             let name = found[i].getAttribute('name');
             if(!name){
-                name = found[i].getAttribute(this.options.renderAttribute);
+                name = found[i].getAttribute(selector);
             }
             if(name){
                 if(elements[name]){
@@ -291,7 +291,7 @@ class Template extends HTMLElement {
      */
     findNamedElements(){
         // @todo STOP THIS from finding elements of other templates
-        let elements = Template.findNamedElements(this);
+        let elements = Template.findNamedElements(this, this.options.renderAttribute);
         Object.extend(this.elements, elements);
     }
 

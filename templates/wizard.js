@@ -67,6 +67,7 @@ class WizardTemplate extends FormTemplate {
             this.displayTab(tabIndex, true);
             this.tab = tabIndex;
             this.elements.pager.setPage(tabIndex + 1);
+            this.emit("tab.show", tabIndex);
         }
     }
 
