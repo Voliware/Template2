@@ -3,12 +3,10 @@ const version = require('./package.json').version;
 
 // base
 const jsBaseInput = [
+    './node_modules/@voliware/eventsystem/dist/eventSystem.min.js',
     './src/js/object.js',
-    './src/js/string.js',
     './src/js/document.js',
-    './src/js/eventSystem.js',
     './src/js/elementManager.js',
-    './src/js/status.js',
     './src/js/template2.js'
 ];
 const jsBaseOutput = './dist/template2.min.js';
@@ -22,13 +20,7 @@ const jsBaseConfig = {
 
 // bundle
 const jsBundleInput = [
-    './src/js/object.js',
-    './src/js/string.js',
-    './src/js/document.js',
-    './src/js/eventSystem.js',
-    './src/js/elementManager.js',
-    './src/js/status.js',
-    './src/js/template2.js',
+    ...jsBaseInput,
     './templates/feedback.js',
     './templates/form.js',
     './templates/pager.js',    

@@ -1,10 +1,9 @@
 /**
- * Set all properties of an object from
- * another object, if both objects have
+ * Set all properties of an object from another object, if both objects have
  * matching properties.
- * @param {object} obj - the object to alter
- * @param {object} data - an object of data
- * @returns {object} the original object
+ * @param {Object} obj - The object to alter
+ * @param {Object} data - An object of data
+ * @returns {Object} The original object
  */
 Object.setProperties = function(obj, data){
     for(let k in data){
@@ -17,8 +16,8 @@ Object.setProperties = function(obj, data){
 
 /**
  * Check if an object is empty
- * @param {object} obj - the object to check
- * @returns {boolean}
+ * @param {Object} obj - The object to check
+ * @returns {Boolean}
  */
 Object.isEmpty = function(obj){
     return !Object.keys(obj).length;
@@ -26,7 +25,7 @@ Object.isEmpty = function(obj){
 
 /**
  * Extends an object into another
- * @returns {object}
+ * @returns {Object}
  * @example
  * let o = Object.extend({}, {a:1}, {a:2, b:3});
  * console.log(o); // {a:2, b:3};
@@ -47,7 +46,10 @@ Object.extend = function(){
                         continue;
                     }
 
-                    if (typeof target[key] === 'object' && typeof item === 'object' && target[key] !== item){
+                    if (typeof target[key] === 'object' && 
+                        typeof item === 'object' && 
+                        target[key] !== item)
+                    {
                         Object.extend(target[key], item);
                     }
                     else {
@@ -63,34 +65,39 @@ Object.extend = function(){
 /**
  * Flatten a nested object into a more simple object.
  * https://tinyurl.com/y6oe2ebq
- * @param {object} obj
- * @returns {object}
+ * @param {Object} obj
+ * @returns {Object}
  * @example 
  * Object.flatten({a: {b: 1, c: 2}}); // {"a.b": 1, "a.c": 2}
  */
 Object.flatten = function(obj){
-    var toReturn = {};
+    let to_return = {};
 
-    for (var i in obj) {
-        if (!obj.hasOwnProperty(i)) continue;
+    for (let i in obj) {
+        if (!obj.hasOwnProperty(i)) {
+            continue
+        }
         if ((typeof obj[i]) == 'object' && obj[i] !== null) {
-            var flatObject = Object.flatten(obj[i]);
-            for (var x in flatObject) {
-                if (!flatObject.hasOwnProperty(x)) continue;
-                toReturn[i + '.' + x] = flatObject[x];
+            let flat_object = Object.flatten(obj[i]);
+            for (let x in flat_object) {
+                if (!flat_object.hasOwnProperty(x)){ 
+                    continue
+                };
+                to_return[i + '.' + x] = flat_object[x];
             }
-        } else {
-            toReturn[i] = obj[i];
+        } 
+        else {
+            to_return[i] = obj[i];
         }
     }
-    return toReturn;
+    return to_return;
 }
 
 /**
  * Unflatten an object into a nested object
  * https://tinyurl.com/y536fqrf
- * @param {object} obj
- * @returns {object}
+ * @param {Object} obj
+ * @returns {Object}
  * @example
  * Object.unflatten({"a.b": 1, "a.c": 2}); // {a: {b: 1, c: 2}}
  */
@@ -99,8 +106,11 @@ Object.unflatten = function(obj){
     for (let i in obj) {
         let keys = i.split('.');
         keys.reduce(function(r, e, j) {
-            return r[e] || (r[e] = isNaN(Number(keys[j + 1])) ? (keys.length - 1 == j ? obj[i] : {}) : []);
+            return r[e] || 
+                (r[e] = isNaN(Number(keys[j + 1])) 
+                    ? (keys.length - 1 === j ? obj[i] : {}) 
+                    : []);
         }, result);
     }
     return result;
-};
+}

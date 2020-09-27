@@ -5,68 +5,39 @@
 class StatusTemplate extends Template {
 
     /**
-     * Which elements attributes will be observed.
-     * If the values of these attributes change,
-     * this is handled in attributeChangedCallback.
-     * @type {string[]}
-     */
-    static get observedAttributes() {['status', 'text']; }
-
-    /**
      * Constructor
-     * @param {object} [options={}]
      */
-    constructor(options){
-        super(options);
-        if(!this.hasAttribute('status')){
-            this.setAttribute('status', Status.none);
-        }
-        if(!this.hasAttribute('text')){
-            this.setAttribute('text', '');
-        }
-    }
+    constructor(){
+        super(...arguments);
 
-    /**
-     * Callback for when an attribute is changed.
-     * If the "status" attribute is changed, update
-     * the icon and background classes.
-     * If the "text" attribute is changed, update the
-     * text HTML.
-     * @param {string} name - attribute name
-     * @param {string} oldValue - old value
-     * @param {string} newValue - new value
-     */
-    attributeChangedCallback(name, oldValue, newValue) {
-        if(name === "status"){
-            let clazz = Status.class.none;
-            if(newValue && newValue !== "" &&  typeof Status.class[newValue] !== 'undefined'){
-                clazz = Status.class[newValue];
-            }
-            this.setClass(clazz);
-        }
-        else if(name === "text"){
-            this.setText(newValue);
-        }
+        /**
+         * The current status
+         * @type {StatusTemplate.status}
+         */
+        this.status = StatusTemplate.status.none;
     }
 
     /**
      * Set the status
-     * @param {string} status 
+     * @param {String} status 
      */
     setStatus(status){
-        this.setAttribute('status', status);
+        if(typeof StatusTemplate.class[status] !== 'undefined'){
+            this.status = status;
+            this.setClass(StatusTemplate.class[status]);
+        }
     }
 
     /**
      * Remove all status- classes
      */
     clearStatusClass(){
-        this.classList.remove(...Status.classArray);
+        this.classList.remove(...StatusTemplate.classArray);
     }
 
     /**
      * Set the class
-     * @param {string} clazz 
+     * @param {String} clazz 
      */
     setClass(clazz){
         this.clearStatusClass();
@@ -75,7 +46,7 @@ class StatusTemplate extends Template {
 
     /**
      * Set the text
-     * @param {string} text 
+     * @param {String} text 
      */
     setText(text){
         this.textContent = text;
@@ -83,8 +54,8 @@ class StatusTemplate extends Template {
 
     /**
      * Render the StatusTemplate
-     * @param {string} status 
-     * @param {string} text 
+     * @param {String} status 
+     * @param {String} text 
      */
     render(status, text){
         this.setStatus(status);
@@ -93,42 +64,67 @@ class StatusTemplate extends Template {
 
     /**
      * Render the StatusTemplate with no status
-     * @param {string} text 
+     * @param {String} text 
      */
     renderNone(text){
-        this.render(Status.none, text);
+        this.render(StatusTemplate.status.none, text);
     }
 
     /**
      * Render the StatusTemplate with error status
-     * @param {string} text 
+     * @param {String} text 
      */
     renderError(text){
-        this.render(Status.error, text);
+        this.render(StatusTemplate.status.error, text);
     }
 
     /**
      * Render the StatusTemplate with success status
-     * @param {string} text 
+     * @param {String} text 
      */
     renderSuccess(text){
-        this.render(Status.success, text);
+        this.render(StatusTemplate.status.success, text);
     }
 
     /**
      * Render the StatusTemplate with info status
-     * @param {string} text 
+     * @param {String} text 
      */
     renderInfo(text){
-        this.render(Status.info, text);
+        this.render(StatusTemplate.status.info, text);
     }
 
     /**
      * Render the StatusTemplate with warning status
-     * @param {string} text 
+     * @param {String} text 
      */
     renderWarning(text){
-        this.render(Status.warning, text);
+        this.render(StatusTemplate.status.warning, text);
     }
 }
+
+StatusTemplate.status = {
+    none: "none",
+    error: "error",
+    success: "success",
+    processing: "processing",
+    info: "info",
+    warning: "warning"
+};
+StatusTemplate.class = {};
+StatusTemplate.class[StatusTemplate.status.none] = "status-none";
+StatusTemplate.class[StatusTemplate.status.error] = "status-error";
+StatusTemplate.class[StatusTemplate.status.success] = "status-success";
+StatusTemplate.class[StatusTemplate.status.processing] = "status-processing";
+StatusTemplate.class[StatusTemplate.status.info] = "status-info";
+StatusTemplate.class[StatusTemplate.status.warning] = "status-warning";
+StatusTemplate.classArray = [
+    StatusTemplate.class.none,
+    StatusTemplate.class.error,
+    StatusTemplate.class.success,
+    StatusTemplate.class.processing,
+    StatusTemplate.class.info,
+    StatusTemplate.class.warning
+];
+
 customElements.define('template-status', StatusTemplate);

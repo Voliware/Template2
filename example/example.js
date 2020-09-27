@@ -67,20 +67,21 @@ let formData = {
         }
     }
 };
+function submitRequest(data){
+    console.log(data);
+    return Promise.resolve();
+}
+function getRequest(){
+    return Promise.resolve(formData);
+}
+function validateRequest(data){
+    return Promise.resolve(true);
+}
 
 let form1 = Template.selectFirst('#formExample');
-form1.setOptions({
-    submitRequest: function(data){
-        console.log(data);
-        return Promise.resolve();
-    },
-    getRequest: function(){
-        return Promise.resolve(formData);
-    },
-    validateRequest(data){
-        return Promise.resolve(true);
-    }
-})
+form1.setSubmitRequest(submitRequest);
+form1.setGetRequest(getRequest);
+form1.setValidateRequest(validateRequest);
 form1.render(formData);
 
 /////////////////////////////////////////
@@ -88,18 +89,9 @@ form1.render(formData);
 ///////////////////////////////////////
 
 let wizard = Template.selectFirst('#wizardExample');
-wizard.setOptions({
-    submitRequest: function(data){
-        console.log(data);
-        return Promise.resolve();
-    },
-    getRequest: function(){
-        return Promise.resolve(formData);
-    },
-    validateRequest(data){
-        return Promise.resolve(true);
-    }
-});
+wizard.setSubmitRequest(submitRequest);
+wizard.setGetRequest(getRequest);
+wizard.setValidateRequest(validateRequest);
 wizard.render(formData);
 
 /////////////////////////////////////////
@@ -144,7 +136,8 @@ customElements.define('template-test', TestTemplate);
 
 let element_manager_wrapper = Template.selectFirst('#elementManagerExample');
 let element_manager_template = Template.selectFirst('#elementManagerTemplate')
-let element_manager = new ElementManager(element_manager_wrapper, element_manager_template);
+let element_manager = new ElementManager({template: element_manager_template});
+element_manager.appendTo(element_manager_wrapper);
 element_manager.render({
     0: {text: "Entry 0"},
     1: {text: "Entry 1"},

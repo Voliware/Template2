@@ -173,15 +173,7 @@
                     </form>
                 </div>
                 <div class="wizard-pager">
-                    <template-pager>
-                        <button name="previous" type="button">Previous</button>
-                        <div class="pager-input">
-                            <input name="page" type="number" class="pager-page">
-                            <span>/</span>
-                            <span data-name="pageCount"></span>
-                        </div>
-                        <button name="next" type="button">Next</button>
-                    </template-pager>
+                    <template-pager></template-pager>
                 </div>
             </template-wizard>
 
@@ -189,22 +181,7 @@
             <hr>
             <h3>Popup Example</h3>
             <button id="popupExampleButton">Launch Popup</button>
-            <template-popup id="popupExample">
-                <div class="popup-content">
-                    <div class="popup-header">
-                        <div class="popup-title">
-                            <h3>Popup Title</h3>
-                        </div>
-                        <button type="button" class="btn-none popup-close">
-                            X
-                        </button>
-                    </div>
-                    <div class="popup-body">
-                        <p>This is a message.</p>
-                    </div>
-                    <div class="popup-footer"></div>
-                </div>
-            </template-popup>
+            <template-popup id="popupExample"></template-popup>
 
             <!-- status example -->
             <hr>
@@ -216,21 +193,16 @@
             <!-- feedback example -->
             <hr>
             <h3>Feedback Example</h3>
-            <template-feedback id="feedbackExample1">
-                <div class="feedback-icon"></div>
-                <div class="feedback-text"></div>
-                <button class="feedback-close">X</button>
-            </template-feedback>
-            <template-feedback id="feedbackExample2">
-                <div class="feedback-icon"></div>
-                <div class="feedback-text"></div>
-                <button class="feedback-close">X</button>
-            </template-feedback>
-            <template-feedback id="feedbackExample3">
-                <div class="feedback-icon"></div>
-                <div class="feedback-text"></div>
-                <button class="feedback-close">X</button>
-            </template-feedback>
+            <template-feedback id="feedbackExample1"></template-feedback>
+            <template-feedback id="feedbackExample2"></template-feedback>
+            <template-feedback id="feedbackExample3"></template-feedback>
+
+            <!-- list example -->
+            <template-list id="listExample1">
+                <button type="button" alt="Next" class="list-previous">&gt;</button>
+                <button type="button" alt="Previous" class="list-next">&lt;</button>
+                <div class="list-items"></div>
+            </template-list>
 
             <!-- element manager example -->
             <hr>

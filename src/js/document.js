@@ -1,19 +1,19 @@
 /**
  * Get a set of matching elements by data-name attribute
- * @param {string} dataname - the data-name attribute value
+ * @param {String} data_name - the data-name attribute value
  * @returns {HTMLElement[]}
  */
-document.getElementsByDataName = function(dataName){
-    return document.querySelectorAll(`[data-name="${dataName}"]`);
+document.getElementsByDataName = function(data_name){
+    return document.querySelectorAll(`[data-name="${data_name}"]`);
 };
 
 /**
  * Get the first matching element by data-name attribute
- * @param {string} dataname - the data-name attribute value
+ * @param {String} data_name - the data-name attribute value
  * @returns {HTMLElement}
  */
-document.getElementByDataName = function(dataName){
-    let elements = document.getElementsByDataName(dataName);
+document.getElementByDataName = function(data_name){
+    let elements = document.getElementsByDataName(data_name);
     if(elements.length){
         return elements[0];
     }

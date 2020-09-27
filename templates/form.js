@@ -6,67 +6,174 @@ class FormTemplate extends Template {
 
     /**
      * Constructor
-     * @param {object} [options] 
-     * @param {function} [options.getRequest]
-     * @param {function} [options.submitRequest]
-     * @param {function} [options.validateRequest]
-     * @param {number} [options.checkboxMode]
-     * @param {number} [options.serializeMode]
-     * @param {string[]} [options.excludedFields=["disabled"]]
-     * @param {object} [options.elements]
-     * @param {string} [options.elements.form="form"]
-     * @param {string} [options.elements.footer=".form-footer"]
+     * @param {Object} [params] 
+     * @param {Function} [params.get_request] - Function to call when 
+     * submitting the form
+     * @param {Function} [params.submit_request] - Function to call to load 
+     * data and populate the form
+     * @param {Function} [params.validate_request] - Function to call to 
+     * validate the form's input data
+     * @param {Number} [params.checkbox_mode] - How to serialize checkboxes
+     * @param {Number} [params.serialize_mode] - How to serialize inputs
+     * @param {String[]} [params.excluded_fields=["disabled"]] - Field names to
+     *  exclude from serialization
+     * @param {Object} [params.elements]
+     * @param {String} [params.elements.form="form"]
+     * @param {String} [params.elements.header=".form-header"]
+     * @param {String} [params.elements.body=".form-body"]
+     * @param {String} [params.elements.footer=".form-footer"]
+     * @param {String} [params.elements.reset="[type='reset']"]
+     * @param {String} [params.elements.submit="[type='submit']"]
      */
-    constructor(options = {}){
-        let defaults = {
-            getRequest: null,
-            submitRequest: null,
-            validateRequest: null,
-			checkboxMode: FormTemplate.checkboxMode.number,
-            serializeMode: FormTemplate.serializeMode.toObject,
-            excludedFields: ['disabled'],
-            elements: {
-                form: 'form',
-                footer: '.form-footer',
-                reset: '[type="reset"]',
-                submit: '[type="submit"]'
-            }
-        };
-        super(Object.extend(defaults, options));
-        this.serializedData = {};
-        this.formattedSerializedData = null;
+    constructor({
+        get_request = null,
+        submit_request = null,
+        validate_request = null,
+        checkbox_mode = FormTemplate.checkbox_mode.number,
+        serialize_mode = FormTemplate.serialize_mode.to_object,
+        excluded_fields = ['disabled'],
+        elements = {
+            form: 'form',
+            header: '.form-header',
+            body: '.form-body',
+            footer: '.form-footer',
+            reset: '[type="reset"]',
+            submit: '[type="submit"]'
+        }
+    } = {})
+    {
+        super({elements});
+
+        /**
+         * Function to call when submitting the form.
+         * @type {Function}
+         */
+        this.get_request = get_request;
+
+        /**
+         * Function to call to load data and populate the form.
+         * @type {Function}
+         */
+        this.submit_request = submit_request;
+
+        /**
+         * Function to call to validate the form's input data.
+         * @type {Function}
+         */
+        this.validate_request = validate_request;
+
+        /**
+         * How to serialize checkboxes.
+         * @type {FormTemplate.checkbox_mode}
+         */
+        this.checkbox_mode = checkbox_mode;
+
+        /**
+         * How to serialize inputs.
+         * @type {FormTemplate.serialize_mode}
+         */
+        this.serialize_mode = serialize_mode;
+
+        /**
+         * Field names to exclude from serialization
+         * @type {String[]}
+         */
+        this.excluded_fields = excluded_fields;
+
+        /**
+         * Raw serialized data. Each key is an input name.
+         * @type {Object}
+         */
+        this.serialized_data = {};
+
+        /**
+         * Formatted serialized data.
+         * @type {Object|String}
+         */
+        this.formatted_serialized_data = null;
+    }
+
+    /**
+     * Attach button handlers.
+     */
+    onConnected(){
         this.attachFormHandlers();
+    }
+
+    /**
+     * Create the inner html
+     * @returns {String}
+     */
+    createHtml(){
+        return `<form>
+                    <div class="form-header"></div>
+                    <div class="form-body"></div>
+                    <div class="form-footer">
+                        <button type="reset">Reset</button>
+                        <button type="submit">Submit</button>
+                    </div>
+                </form>`;
     }
 
     /**
      * Attach handlers to the default form events.
      */
     attachFormHandlers(){
-        let self = this;
-        this.elements.form.addEventListener('submit', function(event){
+        this.elements.form.addEventListener('submit', (event) => {
             event.preventDefault();
-            self.submit();
+            this.submit();
         });
-        this.elements.form.addEventListener('reset', function(event){
+        this.elements.form.addEventListener('reset', (event) => {
             event.preventDefault();
-            self.reload();
+            this.reload();
         });
     }
 
     /**
      * Toggle the display of the footer.
-     * @param {boolean} state
+     * @param {Boolean} state
      */
     displayFooter(state){
         Template.display(this.elements.footer, state);
     }
 
     /**
+     * Set the form submit function.
+     * @param {Function} func
+     */
+    setSubmitRequest(func){
+        this.submit_request = func;
+    }
+
+    /**
+     * Set the form get data function.
+     * @param {Function} func
+     */
+    setGetRequest(func){
+        this.get_request = func;
+    }
+
+    /**
+     * Set the form validate function.
+     * @param {Function} func
+     */
+    setValidateRequest(func){
+        this.validate_request = func;
+    }
+
+    /**
+     * Reset the form
+     */
+    reset(){
+        this.elements.form.reset();
+    }
+
+    /**
      * Reload the form.
      */
     reload(){
-        if(!Object.isEmpty(this.cachedData)){
-            this.render(this.cachedData);
+        if(!Object.isEmpty(this.cached_data)){
+            this.render(this.cached_data);
         }
         else {
             this.reset();
@@ -75,7 +182,7 @@ class FormTemplate extends Template {
 
     /**
      * Validate the form.
-     * @returns {boolean}
+     * @returns {Boolean}
      */
     validate(){
         return true;
@@ -84,32 +191,32 @@ class FormTemplate extends Template {
     /**
      * Convert a checkbox into a boolean, string, or number.
      * @param {HTMLElement} checkbox 
-     * @param {number} mode 
-     * @returns {boolean|string|number}
+     * @param {Number} mode 
+     * @returns {Boolean|String|Number}
      */
     convertCheckbox(checkbox, mode){
 		let checked = checkbox.checked
 		switch(mode){
-			case FormTemplate.checkboxMode.boolean:
+			case FormTemplate.checkbox_mode.boolean:
                 return checked;
-			case FormTemplate.checkboxMode.string:
+			case FormTemplate.checkbox_mode.string:
 				return checked ? '1' : '0';
-			case FormTemplate.checkboxMode.onOff:
+			case FormTemplate.checkbox_mode.on_off:
 				return checked ? 'on' : 'off';
             default:
-            case FormTemplate.checkboxMode.number:
+            case FormTemplate.checkbox_mode.number:
                 return checked ? 1 : 0;
 		}
     }
     
     /**
      * Determine if a field is not excluded
-     * @param {string} field 
-     * @returns {boolean}
+     * @param {String} field 
+     * @returns {Boolean}
      */
     isNotExcluded(field){
-        for(let i = 0; i < this.options.excludedFields.length; i++){
-            let attribute = this.options.excludedFields[i];
+        for(let i = 0; i < this.excluded_fields.length; i++){
+            let attribute = this.excluded_fields[i];
             if(attribute === "disabled"){
                 if(field.hasAttribute("disabled")){
                     return false;
@@ -121,10 +228,10 @@ class FormTemplate extends Template {
 
     /**
      * Serialize the form 
-     * @returns {object}
+     * @returns {Object}
      */
     serialize(){
-        this.serializedData = {};
+        this.serialized_data = {};
         
         let inputs = Array.from(this.getElementsByTagName('input'));
         let selects = Array.from(this.getElementsByTagName('select'));
@@ -136,13 +243,13 @@ class FormTemplate extends Template {
             }
         }
 
-        return this.serializedData;
+        return this.serialized_data;
     }
 
     /**
      * Serialize an input
      * @param {HTMLElement} input 
-     * @returns {object}
+     * @returns {Object}
      */
     serializeInput(input){
         let name = input.getAttribute('name');
@@ -150,14 +257,13 @@ class FormTemplate extends Template {
         let val = null;
         switch(type){
             case 'checkbox':
-                val = this.convertCheckbox(input, this.options.checkboxMode);
+                val = this.convertCheckbox(input, this.checkbox_mode);
                 break;
             case 'radio':
                 if(input.checked){
                     val = input.value;
                 }
-                // need to return here to prevent
-                // empty radios from setting data
+                // Need to return here to prevent empty radios from setting data
                 else {
                     return null;
                 }
@@ -175,13 +281,13 @@ class FormTemplate extends Template {
                 break;
         }
 
-        return this.serializedData[name] = val;
+        return this.serialized_data[name] = val;
     }
 
     /**
      * Serialize a textarea
      * @param {HTMLElement} input 
-     * @returns {object}
+     * @returns {Object}
      */
     serializeTextarea(textarea){
         return this.serializeSelect(textarea);        
@@ -190,35 +296,35 @@ class FormTemplate extends Template {
     /**
      * Serialize a select
      * @param {HTMLElement} input 
-     * @returns {object}
+     * @returns {Object}
      */
     serializeSelect(select){
         let name = select.getAttribute('name');
-        return this.serializedData[name] = select.value;
+        return this.serialized_data[name] = select.value;
     }
 
     /**
      * Format the already serialized data
      * into a string or an object
-     * @param {object} data 
-     * @param {number} mode
-     * @returns {string|object}
+     * @param {Object} data 
+     * @param {Number} mode
+     * @returns {String|object}
      */
     formatSerializedData(data, mode){
 		switch(mode){
-			case FormTemplate.serializeMode.toString:
+			case FormTemplate.serialize_mode.to_string:
 				return this.serializedDataToString(data);
             default:
-            case FormTemplate.serializeMode.toObject:
-                this.serializedData = Object.unflatten(this.serializedData);
-                return this.serializedData;
+            case FormTemplate.serialize_mode.to_object:
+                this.serialized_data = Object.unflatten(this.serialized_data);
+                return this.serialized_data;
 		}
     }
 
     /**
      * Serialize data into a string
-     * @param {object} data 
-     * @returns {string}
+     * @param {Object} data 
+     * @returns {String}
      */
 	serializedDataToString(data){
 		let str = "";
@@ -234,17 +340,21 @@ class FormTemplate extends Template {
 	}
 
     /**
-     * Submit the form.
-     * Serialize data and pass the data
-     * to the submitRequest function.
+     * Submit the form. Serialize data and pass the data to the submit_request
+     * function.
      * @returns {Promise}
      */
     async submit(){
-        this.serializedData = this.serialize();
-        this.formattedSerializedData = this.formatSerializedData(this.serializedData, this.options.serializeMode);
+        this.serialized_data = this.serialize();
+        this.formatted_serialized_data = this.formatSerializedData(
+            this.serialized_data, 
+            this.serialize_mode
+        );
         try {
-            let response = await this.options.submitRequest(this.formattedSerializedData)
-            if(response.status === 200){
+            let response = await this.submit_request(
+                this.formatted_serialized_data
+            );
+            if(response.status && response.status === 200){
                 this.emit('success', response.body);
             }
             else {
@@ -256,16 +366,26 @@ class FormTemplate extends Template {
         }
     }
 }
-FormTemplate.checkboxMode = {
+
+/**
+ * Modes to serialize a checkbox
+ * @type {Object}
+ */
+FormTemplate.checkbox_mode = {
 	boolean : 0,
 	number : 1,
 	string : 2,
-	onOff : 3
+	on_off : 3
 };
-FormTemplate.serializeMode = {
-	toString : 0,
-	toOrderedString : 1,
-	toObject : 2,
-	toValue : 3
+
+/**
+ * Modes to serialize inputs
+ * @type {Object}
+ */
+FormTemplate.serialize_mode = {
+	to_string : 0,
+	to_ordered_string : 1,
+	to_object : 2,
+	to_value : 3
 };
 customElements.define('template-form', FormTemplate);

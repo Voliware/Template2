@@ -7,76 +7,137 @@ class TableTemplate extends Template {
 
     /**
      * Constructor
-     * @param {object} [options={}] 
-     * @param {boolean} [options.alwaysRebuild=false] - whether to always wipe
+     * @param {Object} [params] 
+     * @param {Boolean} [params.always_rebuild=false] - Whether to always wipe
      * and then rebuild the table
-     * @param {object} [options.elements] - the table elements
-     * @param {string} [options.elements.table="table"] - the table element selector
-     * @param {string} [options.elements.thead="thead"] - the thead element selector
-     * @param {string} [options.elements.theadTr="theadTr"] - the thead row element selector
-     * @param {string} [options.elements.tbody="tbody"] - the thead element selector
-     * @param {string} [options.elements.tfoot="tfoot"] - the tfoot element selector
-     * @param {string} [options.elements.tr="tr"] - the tbody row element selector
-     * @param {object} [optinos.schema={}]
-     * @param {string} [options.schema.primaryKey="id"] - the table's primary key
-     * @param {string[]} [options.schema.columns=[]] - array of column names, required for a
-     * table that is not defined first in HTML
-     * @param {string[]} [options.schema.columnTitles=[]] - array of column titles, optional if
-     * you want the header to display a different title for each column instead of its name
+     * @param {Object} [params.elements] - The table elements
+     * @param {String} [params.elements.table="table"] - Table selector
+     * @param {String} [params.elements.thead="thead"] - thead selector
+     * @param {String} [params.elements.thead_tr="thead_tr"] - thead_tr selectr
+     * @param {String} [params.elements.tbody="tbody"] - tbody selector
+     * @param {String} [params.elements.tfoot="tfoot"] - tfoot selector
+     * @param {String} [params.elements.tr="tr"] - tr selector
+     * @param {Object} [params.schema={}]
+     * @param {String} [params.schema.primary_key="id"] - Primary key
+     * @param {String[]} [params.schema.columns=[]] - Array of column names
+     * @param {String[]} [params.schema.column_titles=[]] - Array of column
+     * titles, optional if you want the header to display a different title
+     * for each column instead of its name.
      */
-    constructor(options = {}){
-        let defaults = {
-            alwaysRebuild: false,
-            elements: {
-                table: 'table',
-                thead: 'thead',
-                theadTr: 'thead > tr',
-                tbody: 'tbody',
-                tfoot: 'tfoot',
-                tr: 'tbody > tr'
-            },
-            schema: {
-                primaryKey: 'id',
-                columns: [],
-                columnTitles: []
-            }
-        };
-        super(Object.extend(defaults, options));
+    constructor({
+        always_rebuild = false,
+        elements = {
+            table: 'table',
+            thead: 'thead',
+            thead_tr: 'thead > tr',
+            tbody: 'tbody',
+            tfoot: 'tfoot',
+            tr: 'tbody > tr'
+        },
+        schema = {
+            primary_key: 'id',
+            columns: [],
+            column_titles: []
+        }
+    } = {})
+    {
+        super({elements});
+        
+        /**
+         * Whether to always wipe and then rebuild the table
+         * @type {Boolean}
+         */
+        this.always_rebuild = always_rebuild;
 
-        this.rowManager = new ElementManager(this.elements.tbody, this.elements.tr);;
+        /**
+         * The table schema
+         * @type {Object}
+         */
+        this.schema = {
+            /**
+             * The primary key
+             * @type {String}
+             */
+            primary_key: schema.primary_key,
+            
+            /**
+             * Array of column names
+             * @type {String[]}
+             */
+            columns: schema.columns,
+
+            /**
+             * Array of column titles, optional if you want the header to 
+             * display a different title for each column instead of its name.
+             * @type {String[]}
+             */
+            column_titles: schema.column_titles
+        }
+
+        /**
+         * Builds and updates rows in the table.
+         * @type {ElementManager}
+         */
+        this.row_manager = null;
+    }
+
+    /**
+     * Create the row manager now that the row template can be selected
+     * and that the tbody can be used as the row manager wrapper.
+     */
+    onConnected(){
+        this.row_manager = new ElementManager({
+            wrapper: this.elements.tbody,
+            template: this.elements.tr,
+            primary_key: this.schema.primary_key
+        });
         this.elements.tr.remove();
     }
 
     /**
-     * Render the table.
-     * Essentially, pass the data to rowManager
-     * who will take care of rendering the rows.
-     * @param {object} data 
+     * Create the inner html
+     * @returns {String}
+     */
+    createHtml(){
+        return `<table>
+                    <thead>
+                        <tr></tr>
+                    </thead>
+                    <tbody>
+                        <tr></tr>
+                    </tbody>
+                </table>`
+    }
+
+    /**
+     * Render the table. Pass the data to row_manager who will take care of
+     * rendering the rows.
+     * @param {Object} data 
      */
     render(data){
-        this.cacheData(data);
-        this.processRenderData(data);
+        this.cached_data = this.cacheData(data);
+        this.render_data = this.processRenderData(data);
 
-        // empty the table if the option is set
-        // or if the data is an array and there is no primary key
-        // without a primary key, we don't know how to manage rows
-        if(this.options.alwaysRebuild){
+        // Empty the table if the option is set or if the data is an array and
+        // there is no primary key without a primary key, we don't know how to
+        // manage rows
+        if(this.always_rebuild){
             this.empty();
         }
-        else if(Array.isArray(this.renderData)){
-            if(typeof this.renderData[0][this.options.primaryKey] === 'undefined'){
+        else if(Array.isArray(this.render_data)){
+            if(typeof this.render_data[0][this.primary_key] === 'undefined'){
                 this.empty();
             }
         }
 
-        this.rowManager.render(this.renderData);
+        this.row_manager.render(this.render_data);
     }
 
     /**
      * Empty the table tbody
      */
     empty(){
-        this.rowManager.empty();
+        this.row_manager.empty();
     }
 }
 customElements.define('template-table', TableTemplate);

@@ -1,70 +1,102 @@
 /**
  * Pager Template.
- * Controls pagination to navigate between 
- * pages of things. Controls a previous button,
- * next button, current page display, and 
- * a text input that also allows manual paging.
+ * Controls pagination to navigate between pages of things. Controls a previous
+ * button, next button, current page display, and a text input that also allows
+ * manual paging.
  * @extends {Template}
  */
 class PagerTemplate extends Template {
 
     /**
      * Constructor
-     * @param {object} options 
-     * @returns {PagerTemplate}
+     * @param {Object} [params]
+     * @param {Object} [params.elements]
+     * @param {String} [params.elements.page="[name='age']"]
+     * @param {String} [params.elements.previous="[name='previous']"]
+     * @param {String} [params.elements.page_count="[data-name='page_count']"]
+     * @param {String} [params.elements.next="[name='next']"]
      */
-    constructor(options){
-        super(options);
+    constructor({
+        elements = {
+            page: '[name="page"]',
+            previous: '[name="previous"]',
+            page_count: '[data-name="pageCount"]',
+            next: '[name="next"]'
+        }
+    } = {})
+    {
+        super({elements});
+
+        /**
+         * The current page. 1 is minimum.
+         * @type {Number}
+         */
         this.page = 1;
-        this.pageCount = 1;
+
+        /**
+         * The page count. 1 is minimum.
+         * @type {Number}
+         */
+        this.page_count = 1;
+    }
+
+    /**
+     * Attach button handlers.
+     */
+    onConnected(){
         this.attachButtonHandlers();
     }
 
     /**
-     * Set the current page count.
-     * Render the pager.
-     * @param {number} pageCount 
-     * @returns {PagerTemplate}
+     * Create the inner html
+     * @returns {String}
      */
-    setPageCount(pageCount){
-        this.pageCount = pageCount;
-        this.render();
-        return this;
+    createHtml(){
+        return `<button name="previous" type="button">Previous</button>
+                    <div class="pager-input">
+                        <input name="page" type="number" class="pager-page">
+                        <span>/</span>
+                        <span data-name="pageCount"></span>
+                    </div>
+                <button name="next" type="button">Next</button>`;
     }
 
     /**
-     * Set the current page.
-     * Render the pager.
-     * @param {number} pageCount 
-     * @returns {PagerTemplate}
+     * Set the current page count. Render the pager.
+     * @param {Number} page_count 
+     */
+    setPageCount(page_count){
+        this.page_count = page_count;
+        this.render();
+    }
+
+    /**
+     * Set the current page. Render the pager.
+     * @param {Number} page_count 
      */
     setPage(page){
         this.page = page;
         this.render();
-        return this;
     }
 
     /**
-     * Render the pager.
-     * If no data is passed, used the 
-     * internal properties.
-     * @param {object} [data={}] 
-     * @returns {PagerTemplate}
+     * Render the pager. If no data is passed, used the internal properties.
+     * @param {Object} [data={}] 
      */
     render(data = {}){
-        if(typeof data.pageCount === "undefined"){
-            data.pageCount = this.pageCount;
+        if(typeof data.page_count === "undefined"){
+            data.page_count = this.page_count;
         }
         if(typeof data.page === "undefined"){
             data.page = this.page;
         }
         super.render(data);
-        if(data.pageCount <= 1){
+        if(data.page_count <= 1){
             this.disableNextButton()
             this.disablePreviousButton();
         }
         else {
-            if(data.page === data.pageCount){
+            if(data.page === data.page_count){
                 this.disableNextButton();
                 this.enablePreviousButton();
             }
@@ -77,92 +109,75 @@ class PagerTemplate extends Template {
                 this.enablePreviousButton();
             }
         }
-        return this;
     }
 
     /**
      * Show or hide the next button.
-     * @param {boolean} state - true to show, false to hide
-     * @returns {PagerTemplate}
+     * @param {Boolean} state - true to show, false to hide
      */
     displayNextButton(state){
         Template.display(this.elements.next, state);
-        return this;
     }
 
     /**
      * Show or hide the previous button.
-     * @param {boolean} state - true to show, false to hide
-     * @returns {PagerTemplate}
+     * @param {Boolean} state - true to show, false to hide
      */
     displayPreviousButton(){
         Template.display(this.elements.previous, state);
-        return this;
     }
 
     /**
      * Enable the next button.
-     * @returns {PagerTemplate}
      */
     enableNextButton(){
         Template.enable(this.elements.next);
-        return this;
     }
 
     /**
      * Disable the next button.
-     * @returns {PagerTemplate}
      */
     disableNextButton(){
         Template.disable(this.elements.next);
-        return this;
     }
 
     /**
      * Enable the previous button.
-     * @returns {PagerTemplate}
      */
     enablePreviousButton(){
         Template.enable(this.elements.previous);
-        return this;
     }
 
     /**
      * Disable the previous button.
-     * @returns {PagerTemplate}
      */
     disablePreviousButton(){
         Template.disable(this.elements.previous);
-        return this;
     }
 
     /**
      * Attach button handlers
-     * @returns {PagerTemplate}
      */
     attachButtonHandlers(){
-        let self = this;
-        Template.on(this.elements.next, "click.pager", function(){
-            self.setPage(self.page + 1);
-            self.emit("next");
+        Template.on(this.elements.next, "click.pager", () => {
+            this.setPage(this.page + 1);
+            this.emit("next");
         });
-        Template.on(this.elements.previous, "click.pager", function(){
-            self.setPage(self.page - 1);
-            self.emit("previous");
+        Template.on(this.elements.previous, "click.pager", () => {
+            this.setPage(this.page - 1);
+            this.emit("previous");
         });
         let debounce = null;
-        Template.on(this.elements.page, "input.pager", function(){
+        Template.on(this.elements.page, "input.pager", () => {
             clearTimeout(debounce);
-            debounce = setTimeout(function(){
-                let value = parseInt(self.elements.page.value);
-                if(value && value <= self.pageCount){
-                    self.page = value;
-                    self.emit("page", self.page);
+            debounce = setTimeout(() => {
+                let value = parseInt(this.elements.page.value);
+                if(value && value <= this.page_count){
+                    this.page = value;
+                    this.emit("page", this.page);
                 }
             }, 150);
-
         });
-        return this;
     }
 }
 customElements.define('template-pager', PagerTemplate);

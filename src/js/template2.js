@@ -7,261 +7,348 @@
 
 /**
  * An enhanced HTMLElement.
- * Has more control over its child elements
- * by capturing them during initialization 
- * into the local "elements" object. Each child element
- * is captured by any desired element attribute and,
- * if named appropriately, can be rendered with data via render().
+ * Provides many easy-to-use functions for typical DOM manipulation.
  * Provides a namespaced EventSystem with on/off handlers.
- * Has a render function that takes in an object of data and
- * populates child elements with same-named attributes.
+ * Renders all child elements that have [name] or [data-name] (default)
+ * attributes set by matching with an object of data. 
+ * Child elements can be collected as defined by constructor params.
+ * Requires use of the customElements system.
  * @extends {HTMLElement}
+ * @example
+ * class ChatBubbleTemplate extends Template {}
+ * customElements.define('template-chat-bubble', ChatBubbleTemplate);
+ * @todo Write a way using node-build and the replace stream to insert
+ * templates written into html into the createHtml() function. So cool.
+ * Something easy like Template.setHtml(MyTemplate, my_file); in build script.
  */
 class Template extends HTMLElement {
 
     /**
      * Constructor
-     * @param {object} [options={}]
-     * @param {object} [options.elements={}] - a collection of element selectors
+     * @param {Object} [params={}]
+     * @param {Object} [params.elements={}] - A collection of element selectors
      * to capture child elements of the Template
-     * @param {string} [options.renderAttribute="data-name"] - the attribute of
+     * @param {String} [params.render_attribute="data-name"] - The attribute of
      * each child element to match data in render() with
-     * @param {boolean} [options.displayBlock=true] - whether to add the 
+     * @param {Boolean} [params.display_block=true] - Whether to add the 
      * 'template-block' class to the template 
      */
-    constructor(options = {}){
+    constructor({
+        elements = {},
+        render_attribute = 'data-name',
+        display_block = true
+    } = {})
+    {
         super();
-        let defaults = {
-            elements: {},
-            renderAttribute: 'data-name',
-            displayBlock: true
-        };
-        this.options = Object.extend(defaults, options);
-        this.eventSystem = new EventSystem();
-        this.nativeEvents = {};
-        this.elements = {};
-        this.cachedData = {};
-        this.renderData = {};
-        this.isFirstRender = true;
-        this.findNamedElements();
-        this.findElements(this.options.elements);
-        if(this.options.displayBlock){
-            this.classList.add('template-block');
-        }
-    }
+
+        /**
+         * Event system for native and non-native HTML events
+         * @type {EventSystem}
+         */
+        this.event_system = new EventSystem();
+
+        /**
+         * A collection of registered native events. 
+         * Required to wrap native events with the event system.
+         * @type {Object}
+         */
+        this.native_events = {};
+
+        /**
+         * A collection of registered elements for quick use.
+         * All elements with [name] or [data-name] attributes are automatically
+         * added to this collection when the element is appended to the DOM.
+         * @type {Object}
+         */
+        this.elements = elements;
+
+        /**
+         * The last version of unmodified data passed to the render() function.
+         * @type {Array|Map|Object}
+         */
+        this.cached_data = null;
         
-    /**
-     * Set Template options
-     * @param {object} options 
-     */
-    setOptions(options){
-        for(let k in options){
-            if(this.options.hasOwnProperty(k)){
-                this.options[k] = options[k];
-            }
-        }
+        /**
+         * The last version of modified data passed to the render() function
+         * and modified by processRenderData().
+         * @type {Array|Map|Object}
+         */
+        this.render_data = {};
+
+        /**
+         * Whether or not this is the first time the Template is rendered.
+         * @type {Boolean}
+         */
+        this.is_first_Render = true;
+
+        /**
+         * The HTML attribute used to find and register elements to the 
+         * elements collection and to find and render elements.
+         * @type {String}
+         */
+        this.render_attribute = render_attribute
+
+        /**
+         * Whether or not to add the 'template-block' attribute to a
+         * template once it is appended to the DOM. Otherwise, templates
+         * by nature have no default display. 
+         * @type {Boolean}
+         */
+        this.display_block = display_block;
     }
-        
-    ////////////////////////////////////////////
-    // Events
-    ////////////////////////////////////////////
 
     /**
-     * Add an event system to a regulard HTML element
+     * Connected callback. Called when element is attached to DOM.
+     * This is the only time after construction that DOM can be changed.
+     * Add the 'template-block' class if option is set to true.
+     * Capture existing DOM inside the root element if found. Otherwise,
+     * create and set the innerHTML if createHtml() returns html.
+     * Find all elements with [name] or [data-name] attributes.
+     * Find all elements that were added to the elements property.
+     * Call the onConnected() function which child classes implement.
+     */
+    connectedCallback(){
+        // Check for existing HTML
+        if(!this.firstChild){
+            // Create HTML
+            let html = this.createHtml();
+            if(typeof html === "string"){
+                html = html.trim();
+                this.setHtml(html);
+            }
+        }
+        // Toggle visibility
+        if(this.display_block){
+            this.classList.add('template-block');
+        }
+        // Find name elements
+        this.findNamedElements();
+        this.findElements(this.elements);
+        this.onConnected();
+    }
+
+    /**
+     * Called after connectedCallback().
+     * Override this in custom Templates.
+     * This is where event handlers should be attached.
+     */
+    onConnected(){
+
+    }
+
+    /**
+     * Create the inner HTML for this template
+     * @returns {String|Null}
+     */
+    createHtml(){
+        return null;
+    }
+        
+    /**************************************************************************
+     * Events
+     *************************************************************************/
+
+    /**
+     * Add an event system to a regular HTML element
      * @param {HTMLElement} element 
      */
     static addEventSystem(element){
-       element.eventSystem = new EventSystem();
-       element.nativeEvents = {};
+       element.event_system = new EventSystem();
+       element.native_events = {};
     }
 
     /**
-     * Add an event handler an elements event system.
+     * Add an event handler. If this is a native DOM event, such as click, it
+     * will be added to and called by the native event system.
      * @param {HTMLElement} element 
-     * @param {string} event 
-     * @param {function} callback
+     * @param {String} event 
+     * @param {Function} callback
      * @example
      * Template.on(form, "submit", SubmitFunction);
      * @example
      * Template.on(form, "reset.tab1", ResetTab1Function);
      */
     static on(element, event, callback){
-        let baseEvent = event.split('.')[0];
+        let base_event = event.split('.')[0];
 
-        // if it doesn't have one, create an event system for this element
-        if(!element.eventSystem){
+        // Create an event system for this element if it doesn't have one
+        if(!element.event_system){
             Template.addEventSystem(element);
         }
 
-        // add all base events, ie the "click" in "click.namespace",
+        // Add all base events, ie the "click" in "click.namespace",
         // to the elements native event listener. If the event does 
         // not actually exist natively, it will simply not fire.
-        if(element.eventSystem.getHandlersCount(baseEvent) === 0){
-            element.nativeEvents[baseEvent] = function(e){
-                element.eventSystem.emit(baseEvent, e);
+        if(element.event_system.getHandlersCount(base_event) === 0){
+            element.native_events[base_event] = (e) => {
+                element.event_system.emit(base_event, e);
             };
-            element.addEventListener(baseEvent, element.nativeEvents[baseEvent]);
+            element.addEventListener(
+                base_event, 
+                element.native_events[base_event]
+            );
         }
 
-        element.eventSystem.on(event, callback);
+        element.event_system.on(event, callback);
     }
 
     /**
-     * Add an event handler. If this is a native
-     * DOM event, such as click, it will be added to
-     * and called by the native event system.
-     * @param {string} event 
-     * @param {function} callback 
-     * @returns {Template}
+     * Add an event handler. If this is a native DOM event, such as click, it
+     * will be added to and called by the native event system.
+     * @param {String} event 
+     * @param {Function} callback 
      */
     on(event, callback) {
         Template.on(this, event, callback);
-        return this;
     }
 
     /**
-     * Add an event handler an elements event system
-     * that after emitting once, is removed.
+     * Add an event handler that fires once.
      * @param {HTMLElement} element 
-     * @param {string} event 
-     * @param {function} callback
+     * @param {String} event 
+     * @param {Function} callback
      * @example
      * Template.one(form, "submit", SubmitFunction);
      * @example
      * Template.one(form, "reset.tab1", ResetTab1Function);
      */
     static one(element, event, callback){
-        let baseEvent = event.split('.')[0];
+        let base_event = event.split('.')[0];
 
-        // if it doesn't have one, create an event system for this element
-        if(!element.eventSystem){
+        // Create an event system for this element if it doesn't have one
+        if(!element.event_system){
             Template.addEventSystem(element);
         }
 
-        if(element.eventSystem.getHandlersCount(baseEvent) === 0){
-            element.nativeEvents[baseEvent] = function(e){
-                element.eventSystem.emit(baseEvent, e);
-                element.removeEventListener(baseEvent, element.nativeEvents[baseEvent]);
+        if(element.event_system.getHandlersCount(base_event) === 0){
+            element.native_events[base_event] = (e) => {
+                element.event_system.emit(base_event, e);
+                element.removeEventListener(
+                    base_event, 
+                    element.native_events[base_event]
+                );
             }
-            element.addEventListener(baseEvent, element.nativeEvents[baseEvent]);
+            element.addEventListener(
+                base_event, 
+                element.native_events[base_event]
+            );
         }
 
-        element.eventSystem.one(event, callback);
+        element.event_system.one(event, callback);
     }
 
     /**
-     * Add an event handler that firwa once.
-     * @param {string} event 
-     * @param {function} callback 
-     * @returns {Template}
+     * Add an event handler that fires once.
+     * @param {String} event 
+     * @param {Function} callback 
      */
     one(event, callback) {
         Template.one(this, event, callback);
-        return this;
     }
 
     /**
-     * Remove an event. Also removes it from the native event system.
-     * If removeAllChildren is set to true, it will also remove any namespaced handlers.
+     * Remove an event. Also removes it from the native event system. If 
+     * remove_all_child_handlers is set to true, it will also remove any
+     * namespaced handlers.
      * @param {HTMLElement} element 
-     * @param {string} event - an event such as click, or click.foo.bar
-     * @param {boolean} [removeAllChildHandlers=true] - whether to remove all child events
-     * @returns {Template}
+     * @param {String} event - An event such as click, or click.foo.bar
+     * @param {Boolean} [remove_all_child_handlers=true] - Whether to remove 
+     * all child events
      */
-    static off(element, event, removeAllChildHandlers = true){
-        if(!(element.eventSystem instanceof EventSystem)){
+    static off(element, event, remove_all_child_handlers = true){
+        if(!(element.event_system instanceof EventSystem)){
             return;
         }
 
-        let baseEvent = event.split('.')[0];
-        element.eventSystem.off(event, removeAllChildHandlers);
-        if(element.eventSystem.getHandlersCount(baseEvent) === 0){
-            element.removeEventListener(baseEvent, element.nativeEvents[baseEvent]);
+        let base_event = event.split('.')[0];
+        element.event_system.off(event, remove_all_child_handlers);
+        if(element.event_system.getHandlersCount(base_event) === 0){
+            element.removeEventListener(
+                base_event, 
+                element.native_events[base_event]
+            );
         }
     }
   
     /**
-     * Remove an event. Also removes it from the native event system.
-     * If removeAllChildren is set to true, it will also remove any namespaced handlers.
-     * @param {string} event - an event such as click, or click.foo.bar
-     * @param {boolean} [removeAllChildHandlers=true] - whether to remove all child events
-     * @returns {Template}
+     * Remove an event. Also removes it from the native event system. If 
+     * remove_all_child_handlers is set to true, it will also remove any
+     * namespaced handlers.
+     * @param {String} event - An event such as click, or click.foo.bar
+     * @param {Boolean} [remove_all_child_handlers=true] - Whether to remove 
+     * all child events
      */
-    off(event, removeAllChildHandlers = true) {
-        Template.off(this, event, removeAllChildHandlers);
-        return this;
+    off(event, remove_all_child_handlers = true) {
+        Template.off(this, event, remove_all_child_handlers);
     }
 
     /**
      * Emit an event.
      * @param {HTMLElement} element 
-     * @param {string} event - an event such as click, or click.foo.bar
-     * @param {*} data - data to pass along with the event
-     * @returns {EventSystem}
+     * @param {String} event - An event such as click, or click.foo.bar
+     * @param {*} data - Data to pass along with the event
      */
     static emit(element, event, data){
-        if(element.eventSystem instanceof EventSystem){
-            element.eventSystem.emit(event, data);
+        if(element.event_system instanceof EventSystem){
+            element.event_system.emit(event, data);
         }
     }
 
     /**
      * Emit an event.
-     * @param {string} event - an event such as click, or click.foo.bar
-     * @param {*} data - data to pass along with the event
-     * @returns {EventSystem}
+     * @param {String} event - An event such as click, or click.foo.bar
+     * @param {*} data - Data to pass along with the event
      */
     emit(event, data){
         Template.emit(this, event, data);
-        return this;
     }
 
     /**
      * Set attributes from a NamedNodeMap
      * @param {NamedNodeMap} attributes 
-     * @returns {Template}
      */
     setAttributes(attributes){
         for(let i = 0; i < attributes.length; i++){
             let attr = attributes[i];
             this.setAttribute(attr.name, attr.value);
         }
-        return this;
     }
         
-    ////////////////////////////////////////////
-    // Tree
-    ////////////////////////////////////////////
+    /**************************************************************************
+     * DOM
+     *************************************************************************/
 
     /**
      * Find and register elements into the elements object.
      * @param {HTMLElement} element 
-     * @param {object} elements - elements to find
-     * @returns {object}
+     * @param {Object} elements - Elements to find
+     * @returns {Object}
      */
     static findElements(element, elements){
         if(typeof element.elements !== "object"){
             element.elements = {};
         }
         for(let k in elements){
-            element.elements[k] = element.querySelector(elements[k]);
+            if(typeof elements[k] === "string"){
+                element.elements[k] = element.querySelector(elements[k]);
+            }
         }
         return element.elements;
     }
 
     /**
      * Find and register elements into the elements object.
-     * @param {object} elements - elements to find
-     * @returns {object}
+     * @param {Object} elements - Elements to find
+     * @returns {Object}
      */
     findElements(elements){
         return Template.findElements(this, elements);
     }
 
     /**
-     * Find all elements that have name or data-name attributes.
+     * Find all elements that have name or a specific selector.
      * @param {HTMLElement} element - HTMLElement to search through
-     * @returns {object}
+     * @returns {Object}
      */
     static findNamedElements(element, selector = 'data-name'){
         let elements = {};
@@ -291,23 +378,23 @@ class Template extends HTMLElement {
      */
     findNamedElements(){
         // @todo STOP THIS from finding elements of other templates
-        let elements = Template.findNamedElements(this, this.options.renderAttribute);
+        let elements = Template.findNamedElements(this, this.render_attribute);
         Object.extend(this.elements, elements);
     }
 
     /**
      * Get registered child elements of the Template.
-     * @returns {object}
+     * @returns {Object}
      */
     getElements(){
         return this.elements;
     }
 
     /**
-     * Select the all matching child elements of another element.
-     * If no parent element is provided, searches through root node.
+     * Select all matching child elements of another element. If no parent 
+     * element is provided, searches through root node.
      * @param {HTMLElement} element - HTMLElement to search through
-     * @param {string} selector - any valid css selector
+     * @param {String} selector - Any valid css selector
      * @returns {HTMLElement}
      */
     static select(element, selector){
@@ -320,7 +407,7 @@ class Template extends HTMLElement {
 
     /**
      * Select all matching child elements of the root element.
-     * @param {string} selector - any valid css selector
+     * @param {String} selector - Any valid css selector
      * @returns {HTMLElement}
      */
     select(selector){
@@ -330,12 +417,12 @@ class Template extends HTMLElement {
     /**
      * Select the first matching child element of another element.
      * @param {HTMLElement} element - HTMLElement to search through
-     * @param {string} selector - any valid css selector
-     * @returns {HTMLElement}
+     * @param {String} selector - Any valid css selector
+     * @returns {HTMLElement|Null}
      */
     static selectFirst(element, selector){
         let elements = Template.select(element, selector);
-        if(elements instanceof NodeList){
+        if(elements instanceof NodeList && elements.length){
             return elements[0];
         }
         else {
@@ -345,24 +432,24 @@ class Template extends HTMLElement {
 
     /**
      * Select the first matching child element of the root element.
-     * @param {string} selector - any valid css selector
-     * @returns {HTMLElement}
+     * @param {String} selector - Any valid css selector
+     * @returns {HTMLElement|Null}
      */
     selectFirst(selector){
         return Template.selectFirst(this, selector);
     }
 
     /**
-     * Select the last matching child element of another element.
-     * If no parent element is provided, searches through root node.
+     * Select the last matching child element of another element. If no parent
+     * element is provided, searches through root node.
      * @param {HTMLElement} element - HTMLElement to search through
-     * @param {string} selector - any valid css selector
-     * @returns {HTMLElement}
+     * @param {String} selector - Any valid css selector
+     * @returns {HTMLElement|Null}
      */
     static selectLast(element, selector){
         let elements = Template.select(element, selector);
-        if(elements instanceof NodeList){
-            return elements[element.length - 1];
+        if(elements instanceof NodeList && elements.length){
+            return elements[elements.length - 1];
         }
         else {
             return null;
@@ -371,8 +458,8 @@ class Template extends HTMLElement {
 
     /**
      * Select the last matching child element of the root element.
-     * @param {string} selector - any valid css selector
-     * @returns {HTMLElement}
+     * @param {String} selector - Any valid css selector
+     * @returns {HTMLElement|Null}
      */
     selectLast(selector){
         return Template.selectLast(selector);
@@ -380,9 +467,8 @@ class Template extends HTMLElement {
 
     /**
      * Append one element to another element
-     * @param {HTMLElement} element - the element to append
-     * @param {HTMLElement} toElement - the element to append to
-     * @returns {Template}
+     * @param {HTMLElement} element - The element to append
+     * @param {HTMLElement} toElement - The element to append to
      */
     static append(element, toElement){
         toElement.appendChild(element);
@@ -391,50 +477,44 @@ class Template extends HTMLElement {
     /**
      * Append an element 
      * @param {HTMLElement} element 
-     * @returns {Template}
      */
     append(element){
         Template.append(element, this);
-        return this;
     }
 
     /**
      * Append to another element
      * @param {HTMLElement} element 
-     * @returns {Template}
      */
     appendTo(element){
         Template.append(this, element);
-        return this;
     }
 
     /**
      * Prepend an element to another element
-     * @param {HTMLElement} element - the element to prepend
-     * @param {HTMLElement} toElement - the element to prepend to
+     * @param {HTMLElement} element - The element to prepend
+     * @param {HTMLElement} toElement - The element to prepend to
      */
     static prepend(element, toElement){
-        toElement.insertBefore(element, toElement.firstChild);
+        if(toElement.firstChild){
+            toElement.insertBefore(element, toElement.firstChild);
+        }
     }
 
     /**
      * Prepend another element
      * @param {HTMLElement} element 
-     * @returns {Template}
      */
     prepend(element){
         Template.prepend(element, this);
-        return this;
     }
 
     /**
      * Prepend to another element
      * @param {HTMLElement} element 
-     * @returns {Template}
      */
     prependTo(element){
         Template.prepend(this, element);
-        return this;
     }
 
     /**
@@ -449,21 +529,19 @@ class Template extends HTMLElement {
 
     /**
      * Empty the contents of the Template
-     * @returns {Template}
      */
     empty(){
         Template.empty(this);
-        return this;
     }
-
-    ////////////////////////////////////////////
-    // Visibility
-    ////////////////////////////////////////////
+    
+    /**************************************************************************
+     * Visibility
+     *************************************************************************/
 
     /**
      * Determine if an element is visible
      * @param {HTMLElemet} element 
-     * @returns {boolean}
+     * @returns {Boolean}
      */
     static isVisible(element){
         // taken from jquery
@@ -472,7 +550,7 @@ class Template extends HTMLElement {
 
     /**
      * Determine if the Template is visible
-     * @returns {boolean}
+     * @returns {Boolean}
      */
     isVisible(){
         return Template.isVisible(this);
@@ -484,18 +562,16 @@ class Template extends HTMLElement {
      */
     static hide(element){
         if(element.style.display !== "none"){
-            element._previousDisplay_ = element.style.display;
+            element.previous_display = element.style.display;
         }
         element.style.display = "none";
     }
 
     /**
      * Hide the Template
-     * @returns {Template}
      */
     hide(){
         Template.hide(this);
-        return this;
     }
 
     /**
@@ -503,23 +579,20 @@ class Template extends HTMLElement {
      * @param {HTMLElemet} element 
      */
     static show(element){
-        element.style.display = element._previousDisplay_ || "block";
+        element.style.display = element.previous_display || "block";
     }
 
     /**
      * Show the Template 
-     * @returns {Template}
      */
     show(){
         Template.show(this);
-        return this;
     }
 
     /**
-     * Toggle the display of an element by 
-     * adding or removing the hidden class
+     * Toggle the display of an element
      * @param {HTMLElement} element 
-     * @param {boolean} state 
+     * @param {Boolean} state 
      */
     static display(element, state){
         if(typeof state === "undefined"){
@@ -529,23 +602,22 @@ class Template extends HTMLElement {
     }
 
     /**
-     * Toggle the display of the Template by 
-     * adding or removing the hidden class
-     * @param {boolean} state 
-     * @returns {Template}
+     * Toggle the display of the Template
+     * @param {Boolean} state 
      */
     display(state){
         Template.display(this, state);
-        return this;
     }
 
-    // styles
+    /**************************************************************************
+     * Styles
+     *************************************************************************/
 
     /**
      * Get the value of a style of an element
      * @param {HTMLElement} element 
-     * @param {string} style - style such as opacity, height, etc
-     * @returns {string}
+     * @param {String} style - Style such as opacity, height, etc
+     * @returns {String}
      */
     static getStyle(element, style){
         return window.getComputedStyle(element).getPropertyValue(style);
@@ -553,63 +625,65 @@ class Template extends HTMLElement {
 
     /**
      * Get the value of a style of the Template
-     * @param {string} style - style such as opacity, height, etc
-     * @returns {string}
+     * @param {String} style - Style such as opacity, height, etc
+     * @returns {String}
      */
     getStyle(style){
         return Template.getStyle(this, style);
     }
 
-    ////////////////////////////////////////////
-    // Dimensions
-    ////////////////////////////////////////////
+    /**************************************************************************
+     * Dimensions
+     *************************************************************************/
 
     /**
-     * Set the height of an element
+     * Set the height of an element.
      * @param {HTMLElement} element 
-     * @param {number} height 
+     * @param {Number|String} height - If passed as Number, defaults to "px" 
      */
     static setHeight(element, height){
-        element.style.height = height + 'px';
+        if(typeof height === "number"){
+            height += "px";
+        }
+        element.style.height = height;
     }
 
     /**
      * Set the height of the Template
-     * @param {number} height 
-     * @returns {Template}
+     * @param {Number|String} height - If passed as Number, defaults to "px" 
      */
     setHeight(height){
         Template.setHeight(this, height);
-        return this;
     }
 
     /**
      * Set the width of an element
      * @param {HTMLElement} element 
-     * @param {number} width 
+     * @param {Number|String} width - If passed as Number, defaults to "px" 
      */
     static setWidth(element, width){
-        element.style.width = width + 'px';
+        if(typeof width === "number"){
+            width += "px";
+        }
+        element.style.width = width;
     }
 
     /**
      * Set the width of the Template
-     * @param {number} width 
-     * @returns {Template}
+     * @param {Number|String} width - If passed as Number, defaults to "px" 
      */
     setWidth(width){
         Template.setWidth(this, width);
-        return this;
     }
 
-    ////////////////////////////////////////////
-    // Class
-    ////////////////////////////////////////////
+    /**************************************************************************
+     * Class
+     *************************************************************************/
 
     /**
      * Add a class to an element
      * @param {HTMLElement} element 
-     * @param {string} clazz 
+     * @param {String} clazz 
      */
     static addClass(element, clazz){
         element.classList.add(clazz);
@@ -617,19 +691,17 @@ class Template extends HTMLElement {
 
     /**
      * Add a class to the Template
-     * @param {string} clazz 
-     * @returns {Template}
+     * @param {String} clazz 
      */
     addClass(clazz){
         Template.addClass(this, clazz);
-        return this;
     }
 
     /**
      * Determine if an element has a class
      * @param {HTMLElement} element 
-     * @param {string} clazz 
-     * @returns {boolean}
+     * @param {String} clazz 
+     * @returns {Boolean}
      */
     static hasClass(element, clazz){
         return element.classList.contains(clazz);
@@ -637,8 +709,8 @@ class Template extends HTMLElement {
 
     /**
      * Determine if the Template has a class
-     * @param {string} clazz 
-     * @returns {boolean}
+     * @param {String} clazz 
+     * @returns {Boolean}
      */
     hasClass(clazz){
         return Template.hasClass(this, clazz);
@@ -647,7 +719,7 @@ class Template extends HTMLElement {
     /**
      * Remove a class from an element
      * @param {HTMLElement} element 
-     * @param {string} clazz 
+     * @param {String} clazz 
      */
     static removeClass(element, clazz){
         element.classList.remove(clazz);
@@ -655,76 +727,69 @@ class Template extends HTMLElement {
 
     /**
      * Remove a class from the Template
-     * @param {string} clazz 
-     * @returns {Template}
+     * @param {String} clazz 
      */
     removeClass(clazz){
         Template.removeClass(this, clazz);
-        return this;
     }
 
     /**
      * Replace a class of an element with another
      * @param {HTMLElement} element 
-     * @param {string} oldClass - class to replace
-     * @param {string} newClass - class to add
+     * @param {String} old_class - Class to replace
+     * @param {String} new_class - Class to add
      */
-    static replaceClass(element, oldClass, newClass){
-        element.classList.replace(oldClass, newClass);
+    static replaceClass(element, old_class, new_class){
+        element.classList.replace(old_class, new_class);
     }
 
     /**
      * Replace a class of the Template with another
-     * @param {string} oldClass - class to replace
-     * @param {string} newClass - class to add
-     * @returns {Template}
+     * @param {String} old_class - Class to replace
+     * @param {String} new_class - Class to add
      */
-    replaceClass(oldClass, newClass){
-        Template.replaceClass(this, oldClass, newClass);
-        return this;
+    replaceClass(old_class, new_class){
+        Template.replaceClass(this, old_class, new_class);
     }
 
     /**
-     * Toggle a class of an element.
-     * If no state boolean is passed, set the
-     * class state to its opposite
+     * Toggle a class of an element. If no state boolean is passed, set the 
+     * class state to its opposite.
      * @param {HTMLElement} element 
-     * @param {string} clazz 
-     * @param {boolean} [state]
+     * @param {String} clazz 
+     * @param {Boolean} [state]
      */
     static toggleClass(element, clazz, state){
         element.classList.toggle(clazz, state);
     }
     
     /**
-     * Toggle a class of the Template.
-     * If no state boolean is passed, set the
-     * class state to its opposite
-     * @param {string} clazz 
-     * @param {boolean} [state]
-     * @returns {Template}
+     * Toggle a class of an element. If no state boolean is passed, set the 
+     * class state to its opposite.
+     * @param {String} clazz 
+     * @param {Boolean} [state]
      */
     toggleClass(clazz, state){
         Template.toggleClass(this, clazz, state);
         return this;
     }
 
-    ////////////////////////////////////////////
-    // Value
-    ////////////////////////////////////////////
+    /**************************************************************************
+     * Value
+     *************************************************************************/
 
     /**
      * Get the value of an element
      * @param {HTMLElement} element
-     * @returns {string} 
+     * @returns {String} 
      */
     static getValue(element){
         return element.value;
     }
 
     /**
-     * Get the value of the template
-     * @returns {string} 
+     * Get the value of the Template
+     * @returns {String} 
      */
     getValue(){
         return Template.getValue(this);
@@ -733,29 +798,26 @@ class Template extends HTMLElement {
     /**
      * Set the value of an element
      * @param {HTMLElement} element
-     * @param {string} 
+     * @param {String} 
      */
     static setValue(element, value){
         element.value = value;
     }
 
     /**
-     * Set the value of the template
-     * @param {string} 
-     * @returns {Template}
+     * Set the value of the Template
+     * @param {String} 
      */
     setValue(value){
         Template.setValue(this, value);
-        return this;
     }
 
-    ////////////////////////////////////////////
-    // Enable/disable
-    ////////////////////////////////////////////
+    /**************************************************************************
+     * Enable/Disabled
+     *************************************************************************/
 
     /**
-     * Set an element to enabled by
-     * setting the disabled state to false.
+     * Set an element to enabled by setting the disabled state to false.
      * @param {HTMLElement} element 
      */
     static enable(element){
@@ -763,17 +825,14 @@ class Template extends HTMLElement {
     }
 
     /**
-     * Set the Template to enabled by
-     * setting the disabled state to false.
-     * @returns {Template}
+     * Set the Template to enabled by setting the disabled state to false.
      */
     enable(){
         Template.enable(this);
-        return this;
     }
 
     /**
-     * Set an element to disabled.
+     * Set an element to enabled by setting the disabled state to true.
      * @param {HTMLElement} element 
      */
     static disable(element){
@@ -781,54 +840,50 @@ class Template extends HTMLElement {
     }
 
     /**
-     * Set the Template to disabled.
-     * @returns {Template}
+     * Set the Template to enabled by setting the disabled state to true.
      */
     disable(){
         Template.disable(this);
-        return this;
     }
 
-    ////////////////////////////////////////////
-    // Render
-    ////////////////////////////////////////////
+    /**************************************************************************
+     * Rendering
+     *************************************************************************/
 
     /**
-     * Cache data as-is in case the 
-     * original data is required.
-     * @param {object} data 
-     * @returns {object}
+     * Cache data as-is in case the original data is required.
+     * @todo: handle array, map
+     * @param {Object} data 
+     * @returns {Array|Map|Object}
      */
     cacheData(data){
-        return this.cachedData = Object.extend({}, data);
+        return Object.extend({}, data);
     }
 
     /**
      * Process data to be used for rendering.
-     * @param {object} data 
-     * @returns {object}
+     * @param {Object} data 
+     * @returns {Array|Map|Object}
      */
     processRenderData(data){
-        return this.renderData = data;
+        return data;
     }
 
     /**
      * Set the inner HTML of an element
-     * @param {HTMLElement} element - the element to set the HTML of
-     * @param {String|HTMLElement} html - the HTML to set in the element
+     * @param {HTMLElement} element - The element to set the HTML of
+     * @param {String|HTMLElement} html - The HTML to set in the element
      */
     static setHtml(element, html){
         element.innerHTML = html;
     }
 
     /**
-     * Set the inner HTML of the template
+     * Set the inner HTML of the Template
      * @param {String|HTMLElement} html
-     * @returns {Template}
      */
     setHtml(html){
         Template.setHtml(this, html);
-        return this;
     }
 
     /**
@@ -839,13 +894,13 @@ class Template extends HTMLElement {
      * If htmlElement is not a Template element, all elements with a 
      * [name] or [data-name] attribute whose value matches a key name 
      * in the data object will have their value or HTML set accordingly.
-     * @param {HTMLElement} element - the element - which should have 1 or more 
-     *                      child elements - to render. Otherwise, nothing happens.
-     * @param {object} data - the data to render with. This object should have 
-     *                      keys that would match [name] or [data-name] element attributes.
-     * @param {boolean} [isTemplate=false] - whether the htmlElement is a Template
-     *                      or not. If it is, renders using the elements already 
-     *                      registered within the Template object - for speed.
+     * @param {HTMLElement} element - the element - which should have 1 or more
+     * child elements - to render. Otherwise, nothing happens.
+     * @param {Object} data - the data to render with. This object should have 
+     * keys that would match [name] or [data-name] element attributes.
+     * @param {Boolean} [is_template=false] - whether the htmlElement is a
+     * Template or not. If it is, renders using the elements already registered
+     * within the Template object - for speed.
      * @example
      * // fill a div with data
      * // <div id="myDiv">
@@ -866,13 +921,13 @@ class Template extends HTMLElement {
      * let myForm = document.getElementById('myForm');
      * Template.render(myForm, {name: "Bob", status: "online"});
      */
-    static render(element, data, isTemplate = false){
-        // if this is a Template, get the already registered child elements
+    static render(element, data, is_template = false){
+        // If this is a Template, get the already registered child elements
         let elements = null;
-        if(isTemplate){
+        if(is_template){
             elements = element.getElements();
         }
-        // otherwise, find all child elements with name or data-name attributes
+        // Otherwise, find all child elements with name or data-name attributes
         else {
             elements = Template.findNamedElements(element);
         } 
@@ -882,31 +937,31 @@ class Template extends HTMLElement {
             let value = _data[k];
             let htmlElement = elements[k];
 
-            // did not find the element
+            // Did not find the element
             if(!htmlElement){
-                // if its a template, can do a quick regather named elements
-                if(isTemplate){
+                // If its a template, can do a quick regather named elements
+                if(is_template){
                     element.findNamedElements();
                     htmlElement = elements[k];
                 }
-                // still did not find it, continue
+                // Still did not find it, continue
                 if(!htmlElement){
                     continue;
                 }
             }
             
-            // if the element has a render function, use that 
+            // If the element has a render function, use that 
             if(htmlElement.render){
                 htmlElement.render(value);
                 continue;
             }
 
-            // if only a single element was found, put it into an array
+            // If only a single element was found, put it into an array
             if(!Array.isArray(htmlElement)){
                 htmlElement = [htmlElement];
             }
 
-            // loop through all found elements and render them
+            // Loop through all found elements and render them
             for(let i = 0; i < htmlElement.length; i++){
                 let thisElement = htmlElement[i];
 
@@ -944,17 +999,14 @@ class Template extends HTMLElement {
     }
 
     /**
-     * Render the Template.
-     * Cache and process the render data.
-     * @param {object} data 
-     * @returns {Template}
+     * Render the Template. Cache and process the render data.
+     * @param {Object} data 
      */
     render(data){
-        this.cachedData = this.cacheData(data);
-        this.renderData = this.processRenderData(Object.extend({}, data));
-        Template.render(this, this.renderData, true);
-        this.isFirstRender = false;
-        return this;
+        this.cached_data = this.cacheData(data);
+        this.render_data = this.processRenderData(Object.extend({}, data));
+        Template.render(this, this.render_data, true);
+        this.is_first_Render = false;
     }
 
     /**

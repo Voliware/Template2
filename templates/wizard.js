@@ -6,44 +6,87 @@ class WizardTemplate extends FormTemplate {
 
     /**
      * Constructor
-     * @param {object} [options] 
+     * @param {Object} [param] 
+     * @param {Object} [param.elements] 
+     * @param {String} [param.elements.navs=".wizard-navs"] 
+     * @param {String} [param.elements.tabs=".wizard-tabs"] 
+     * @param {String} [param.elements.pager="template-pager"] 
      */
-    constructor(options = {}){
-        let defaults = {
-            elements: {
-				navs: '.wizard-navs',
-                tabs: '.wizard-tabs',
-                pager: 'template-pager'
-            }
-        };
-        super(Object.extend(defaults, options));
-        this.tabCount = 0;
+    constructor({
+        elements = {
+            navs: '.wizard-navs',
+            tabs: '.wizard-tabs',
+            pager: 'template-pager'
+        }
+    } = {})
+    {
+        super({elements});
+
+        /**
+         * Total number of tabs
+         * @type {Number}
+         */
+        this.tab_count = 0;
+
+        /**
+         * The current tab
+         * @type {Number}
+         */
         this.tab = 0;
-        this.tabCount = this.elements.tabs.children.length;
+    }
+
+    /**
+     * Attach handlers. Go to the first tab.
+     */
+    onConnected(){
+        this.tab_count = this.elements.tabs.children.length;
         this.elements.pager.setPage(1);
-        this.elements.pager.setPageCount(this.tabCount);
+        this.elements.pager.setPageCount(this.tab_count);
         this.attachNavHandlers();
-        this.attachPagerHanders();
+        this.attachPagerHandlers();
         this.goToFirstTab();
     }
 
     /**
+     * Create the inner html
+     * @returns {String}
+     */
+    createHtml(){
+        return `<div class="wizard-navs"></div>
+                <div class="wizard-form">
+                    <form>
+                        <div class="form-header"></div>
+                        <div class="form-body">
+                            <div class="wizard-tabs"></div>
+                        </div>
+                        <div class="form-footer">
+                            <button name="reset" type="reset">Reset</button>
+                            <button name="submit" type="submit">Submit</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="wizard-pager">
+                    <template-pager></template-pager>
+                </div>`
+    }
+
+    /**
      * Determine if a tab index is valid.
-     * @param {number} index 
-     * @returns {boolean} true if it is, false otherwise
+     * @param {Number} index 
+     * @returns {Boolean} true if it is, false otherwise
      */
     isValidTabIndex(index){
-        return index > -1 && index < this.tabCount;
+        return index > -1 && index < this.tab_count;
     }
 
     /**
      * Show or hide a tab by its index.
-     * @param {number} tabIndex - tab index
-     * @param {boolean} state - true to show, false to hide
+     * @param {Number} tab_index - Tab index
+     * @param {Boolean} state - True to show, false to hide
      */
-    displayTab(tabIndex, state){
-        if(this.isValidTabIndex(tabIndex)){
-            let tab = this.elements.tabs.children[tabIndex];
+    displayTab(tab_index, state){
+        if(this.isValidTabIndex(tab_index)){
+            let tab = this.elements.tabs.children[tab_index];
             Template.display(tab, state);
         }
     }
@@ -52,22 +95,22 @@ class WizardTemplate extends FormTemplate {
      * Hide all tabs.
      */
     hideTabs(){
-        for(let i = 0; i < this.tabCount; i++){
+        for(let i = 0; i < this.tab_count; i++){
             this.displayTab(i, false);
         }
     }
 
     /**
      * Go to a tab based on its index.
-     * @param {number} tabIndex 
+     * @param {Number} tab_index 
      */
-    goToTab(tabIndex){
-        if(this.isValidTabIndex(tabIndex)){
+    goToTab(tab_index){
+        if(this.isValidTabIndex(tab_index)){
             this.hideTabs();
-            this.displayTab(tabIndex, true);
-            this.tab = tabIndex;
-            this.elements.pager.setPage(tabIndex + 1);
-            this.emit("tab.show", tabIndex);
+            this.displayTab(tab_index, true);
+            this.tab = tab_index;
+            this.elements.pager.setPage(tab_index + 1);
+            this.emit("tab.show", tab_index);
         }
     }
 
@@ -82,14 +125,14 @@ class WizardTemplate extends FormTemplate {
      * Go to the last tab.
      */
     goToLastTab(){
-        this.goToTab(this.tabCount - 1);
+        this.goToTab(this.tab_count - 1);
     }
 
     /**
      * Go to the next tab.
      */
     goToNextTab(){
-        if(this.tab < this.tabCount - 1){
+        if(this.tab < this.tab_count - 1){
             this.tab++;
             this.goToTab(this.tab);
         }
@@ -108,16 +151,15 @@ class WizardTemplate extends FormTemplate {
     /**
      * Attach handlers to the pager.
      */
-    attachPagerHanders(){
-        let self = this;
-        this.elements.pager.on("next", function(){
-            self.goToNextTab();
+    attachPagerHandlers(){
+        this.elements.pager.on("next", () => {
+            this.goToNextTab();
         });
-        this.elements.pager.on("previous", function(){
-            self.goToPreviousTab();
+        this.elements.pager.on("previous", () => {
+            this.goToPreviousTab();
         });
-        this.elements.pager.on("page", function(page){
-            self.goToTab(page - 1);
+        this.elements.pager.on("page", (page) => {
+            this.goToTab(page - 1);
         });
     }
 
@@ -125,11 +167,10 @@ class WizardTemplate extends FormTemplate {
      * Attach handlers to the navs.
      */
     attachNavHandlers(){
-        let self = this;
-        for(let i = 0; i < this.tabCount; i++){
+        for(let i = 0; i < this.tab_count; i++){
             let nav = this.elements.navs.children[i];
-            Template.on(nav, "click.wizard", function(){
-                self.goToTab(i);
+            Template.on(nav, "click.wizard", () => {
+                this.goToTab(i);
             });
         }
     }
@@ -139,7 +180,7 @@ class WizardTemplate extends FormTemplate {
      */
     renderPager(){
         this.elements.pager.setPage(this.tab + 1);
-        this.elements.pager.setPageCount(this.tabCount);
+        this.elements.pager.setPageCount(this.tab_count);
     }
 
     /**

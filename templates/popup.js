@@ -6,58 +6,95 @@ class PopupTemplate extends Template {
 
     /**
      * Constructor
-     * @param {object} options 
-     * @param {boolean} [options.showHeader=true]
-     * @param {boolean} [options.showClose=true]
-     * @param {boolean} [options.showFooter=true]
-     * @param {object} [options.elements]
-     * @param {string} [options.elements.header=".popup-header"]
-     * @param {string} [options.elements.title=".popup-title"]
-     * @param {string} [options.elements.close=".template-popupcloseBtn"]
-     * @param {string} [options.elements.body=".popup-body"]
-     * @param {string} [options.elements.footer=".popup-footer"]
+     * @param {Object} [params={}] 
+     * @param {Boolean} [params.show_header=true]
+     * @param {Boolean} [params.show_close=true]
+     * @param {Boolean} [params.show_footer=true]
+     * @param {Object} [params.elements]
+     * @param {String} [params.elements.header=".popup-header"]
+     * @param {String} [params.elements.title=".popup-title"]
+     * @param {String} [params.elements.close=".template-popupcloseBtn"]
+     * @param {String} [params.elements.body=".popup-body"]
+     * @param {String} [params.elements.footer=".popup-footer"]
      */
-    constructor(options = {}){
-        let defaults = {
-            displayBlock: false,
-            showHeader: true,
-            showClose: true,
-            showFooter: true,
-            elements: {
-                header: '.popup-header',
-                title: '.popup-title',
-                close: '.popup-close',
-                body: '.popup-body',
-                footer: '.popup-footer'
-            }
+    constructor({
+        display_block = false,
+        show_header = true,
+        show_close = true,
+        show_footer = true,
+        elements = {
+            header: '.popup-header',
+            title: '.popup-title',
+            close: '.popup-close',
+            body: '.popup-body',
+            footer: '.popup-footer'
         }
-        super(Object.extend(defaults, options));
-        this.applyOptions(this.options);
+    } = {})
+    {
+        super({display_block, elements});
+
+        /**
+         * Whether to show the header
+         * @type {Boolean}
+         */
+        this.show_header = show_header;
+
+        /**
+         * Whether to show the close button
+         * @type {Boolean}
+         */
+        this.show_close = show_close;
+
+        /**
+         * Whether to show the footer
+         * @type {Boolean}
+         */
+        this.show_footer = show_footer;
+    }
+
+    /**
+     * Attach button handlers.
+     */
+    onConnected(){
+        this.applyOptions();
         this.attachButtonHandlers();
+    }
+
+    /**
+     * Create the inner html
+     * @returns {String}
+     */
+    createHtml(){
+        return `<div class="popup-content">
+                    <div class="popup-header">
+                        <div class="popup-title"></div>
+                        <button type="button" class="btn-none popup-close">X</button>
+                    </div>
+                    <div class="popup-body"></div>
+                    <div class="popup-footer"></div>
+                </div>`;
     }
 
     /**
      * Attach button handlers
      */
     attachButtonHandlers(){
-        let self = this;
-        this.elements.close.addEventListener('click', function(e){
-            self.close();
+        this.elements.close.addEventListener('click', (e) => {
+            this.close();
         });
     }
 
     /**
-     * Apply options to the PopupTemplate
-     * @param {object} options 
+     * Apply params to the PopupTemplate
      */
-    applyOptions(options){
-        if(!options.showHeader && this.elements.header){
+    applyOptions(){
+        if(!this.show_header && this.elements.header){
             this.elements.header.remove();
         }
-        if(!options.showClose && this.elements.close){
+        if(!this.show_close && this.elements.close){
             this.elements.close.remove();
         }
-        if(!options.showFooter && this.elements.footer){
+        if(!this.show_footer && this.elements.footer){
             this.elements.footer.remove();
         }
     }
@@ -82,7 +119,7 @@ class PopupTemplate extends Template {
 
     /**
      * Render the title
-     * @param {string} html 
+     * @param {String} html 
      */
     renderTitle(html){
         this.elements.title.innerHTML = html;
@@ -90,7 +127,7 @@ class PopupTemplate extends Template {
 
     /**
      * Render the body
-     * @param {string} html 
+     * @param {String} html 
      */
     renderBody(html){
         this.elements.body.innerHTML = html;
@@ -98,7 +135,7 @@ class PopupTemplate extends Template {
 
     /**
      * Render the footer
-     * @param {string} html 
+     * @param {String} html 
      */
     renderFooter(html){
         this.elements.footer.innerHTML = html;

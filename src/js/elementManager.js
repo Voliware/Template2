@@ -1,74 +1,115 @@
 /**
  * Element Manager.
  * Can create and manage HTMLElements and Templates.
- * Must be passed a cloneable HTMLElement element 
- * in the constructor to be of any use.
+ * Must be passed a cloneable HTMLElement in the constructor to be of any use.
+ * @fires ElementManager#clone
+ * @fires ElementManager#append
+ * @fires ElementManager#remove
+ * @fires ElementManager#empty
  * @extends {EventSystem}
  * @example
- * // ElementManager would create 3 elements,
- * // render them, and append them to itself
- * let userTempalte = document.getElementById('userTemplate');
- * let userList = document.getElementById('userList');
- * let userElementManager = new ElementManager(userList, userTemplate);
- * userElementManager.render([
- *    {id:0, name: "Jim H", status: "online"},
- *    {id:1, name: "Pam B", status: "offline"},
- *    {id:2, name: "Michael S", status: "online"},
+ * // ElementManager creates, renders, and appends 3 elements to itself
+ * let template = document.getElementById('template');
+ * let list = document.getElementById('list');
+ * let element_manager = new ElementManager(list, template);
+ * element_manager.render([
+ *    {id: 0, name: "Jim H", status: "online"},
+ *    {id: 1, name: "Pam B", status: "offline"},
+ *    {id: 2, name: "Michael S", status: "online"},
  * ]);
- * // ElementManager would update Jim and Pam, 
- * // but, since Michael no longer exists in the data,
- * // it would remove the element/template with that data.
+ * // ElementManager would update Jim and Pam, but, since Michael no longer 
+ * // exists in the data, it would remove the element/template with that data.
  * // What is important is that the "id" is matched.
- * userElementManager.render([
- *    {id:0, name: "Jim H", status: "online"},
- *    {id:1, name: "Pam H", status: "online"},
+ * element_manager.render([
+ *    {id: 0, name: "Jim H", status: "online"},
+ *    {id: 1, name: "Pam H", status: "online"},
  * ]);
  */
 class ElementManager extends EventSystem {
 
     /**
      * Constructor
-     * @param {HTLMElement} wrapper - wrapper element where elements are appended
-     * @param {HTMLElement} template - a cloneable HTMLElement or Template
-     * @param {object} [options]
-     * @param {string} [options.primaryKey="id"] - necessary for rendering data from
-     *                  arrays of objects. Otherwise, ElementManager will just empty
-     *                  itself and rebuild from scratch.
-     * @param {number} [options.maxElements=0] - max element count
-     * @param {boolean} [options.cloneTemplate=true] - whether to clone the initial
-     *                  template from the DOM. Most of the time, you want to do this.   
-     * @param {boolean} [options.removeTemplate=true] - whether to remove the initial
-     *                  template on the DOM. Most of the time, you want to do this,
-     *                  unless there are many ElementManagers using the same template.                  
-     * @param {boolean} [options.removeDeadTemplates=true] - whether to remove dead 
-     *                  templates. A template is dead when it does not exist 
-     *                  in new data passed to render()
-     * @returns {ElementManager}
+     * @param {HTLMElement} wrapper - Wrapper element where elements are appended
+     * @param {HTMLElement} template - A cloneable HTMLElement or Template
+     * @param {Object} [params]
+     * @param {String} [params.primary_key="id"] - Necessary for rendering data
+     * from arrays of objects. Otherwise, ElementManager will just empty itself
+     * and rebuild from scratch.
+     * @param {Number} [params.max_elements=0] - Max element count
+     * @param {Boolean} [params.clone_template=true] - Whether to clone the 
+     * initial template from the DOM. Most of the time, you want to do this.   
+     * @param {Boolean} [params.remove_template=true] - Whether to remove the 
+     * initial template on the DOM. Most of the time, you want to do this,
+     * unless there are many ElementManagers using the same template.                  
+     * @param {Boolean} [params.remove_dead_templates=true] - Whether to remove
+     * dead templates. A template is dead when it does not exist in new data 
+     * passed to render()
      */
-    constructor(wrapper, template, options){
+    constructor({
+        wrapper = null,
+        template = null,
+        primary_key = "id",
+        max_elements = 0,
+        clone_template = true,
+        remove_template = true,
+        remove_dead_templates = true
+    }){
         super();
-        let defaults = {
-            primaryKey: "id",
-            maxElements: 0,
-            cloneTemplate: true,
-            removeTemplate: true,
-            removeDeadTemplates: true
-        };
-        this.options = Object.extend(defaults, options);
 
         /**
          * The element in which all templates will be appended to.
+         * If not defined in the constructor, creates a div element.
          * @type {HTMLElement}
          */
-        this.wrapper = wrapper;
+        this.wrapper = wrapper || document.createElement('div');
+
+        /**
+         * Whether to clone the initial template from the DOM. Most of the time,
+         * you want to do this.
+         * @type {Boolean}
+         */
+        this.clone_template = clone_template;
+
+        /**
+         * Whether to remove the initial template on the DOM. Most of the time,
+         * you want to do this, unless there are many ElementManagers using the
+         * same template. 
+         * @type {Boolean}
+         */
+        this.remove_template = remove_template;
+
+        /**
+         * Whether to remove dead templates. A template is dead when it does
+         * not exist in new data passed to render() as matched by the
+         * primary_key value.
+         * @type {Boolean}
+         */
+        this.remove_dead_templates = remove_dead_templates
+
+        /**
+         * Necessary for rendering data from arrays of objects. Otherwise,
+         * ElementManager will just empty itself and rebuild from scratch.
+         * @type {String}
+         */
+        this.primary_key = primary_key;
+
+        /**
+         * The maximum number of elements to render.
+         * @todo Implement
+         * @type {Number}
+         */
+        this.max_elements = max_elements;
 
         /**
          * A Template HTMLElement to create new templates from.
          * @type {HTMLElement}
          */
-        this.template = this.options.cloneTemplate ? template.cloneNode(true) : template
+        this.template = this.clone_template ? template.cloneNode(true) : template
         this.template.removeAttribute('id');
         this.template.classList.remove('template');
+        if(this.remove_template){
+            template.remove();
+        }
 
         /**
          * A Map of Templates, such as
@@ -78,143 +119,114 @@ class ElementManager extends EventSystem {
          */
         this.elements = new Map();
 
-        // remove the original template from the DOM
-        // it will always be cloneable from this.template
-        if(this.options.removeTemplate){
-            template.remove();
-        }
+        /**
+         * Unmodified data passed to the render function.
+         * @type {Array|Map|Object}
+         */
+        this.cached_data = null;
 
-        this.cachedData = {};
-        this.processedRenderData = {};
-
-        return this;
+        /**
+         * Processed data passed to the render function.
+         * @type {Array|Map|Object}
+         */
+        this.render_data = null;
     }
 
     /**
-     * Cache data as-is in case the 
-     * original data is required.
-     * @param {object} data 
+     * Append the entire manager to another element.
+     * @param {HTMLElement|Template} element 
      */
-    cacheData(data){
-        return Object.extend({}, data);
+    appendTo(element){
+        Template.append(this.wrapper, element);
     }
 
     /**
-     * Process data to be used for rendering.
-     * @param {object} data 
-     * @returns {object}
+     * Get the number of elements in the map
+     * @returns {Number}
      */
-    processRenderData(data){
-        return data;
+    getElementCount(){
+        return this.elements.size;
     }
     
     /**
      * Empty the contents of the template manager
-     * @returns {ElementManager}
      */
     empty(){
         while (this.wrapper.firstChild) {
             this.wrapper.removeChild(this.wrapper.firstChild);
         }
         this.elements = new Map();
-        return this;
+        this.emit("empty");
     }
 
     /**
      * Attach handlers to an element
-     * @param {HTLMElement} element 
-     * @returns {ElementManager}
+     * @param {HTLMElement|Template} element 
      */
     attachElementHandlers(element){
-        return this;
     }
 
     /**
-     * Create a new clone of the template.
-     * Attach handlers to it.
-     * @returns {HTLMElement}
+     * Create a new clone of the template. Attach handlers to it.
+     * @returns {HTLMElement|Template}
      */
     cloneTemplate(){
         let element = this.template.cloneNode(true);
         this.attachElementHandlers(element);
+        this.emit("clone", element);
         return element;
     }
 
     /**
      * Append an element to the wrapper
-     * @param {HTLMElement} element 
-     * @returns {ElementManager}
+     * @param {HTLMElement|Template} element 
      */
     appendElement(element){
         this.wrapper.appendChild(element);
-        return this;
+        this.emit("append", element);
     }
 
     /**
-     * Append an element before an element
-     * @param {HTLMElement} element 
-     * @param {HTMLElement} elementTo
-     * @returns {ElementManager}
-     */
-    appendElementBefore(element, elementTo){
-        elementTo.before(element);
-        return this;
-    }
-
-    /**
-     * Append an element after an element
-     * @param {HTLMElement} element 
-     * @param {HTMLElement} elementTo
-     * @returns {ElementManager}
-     */
-    appendElementAfter(element, elementTo){
-        elementTo.after(element);
-        return this;
-    }
-
-    /**
-     * Remove an element by id.
-     * Removes from the DOM and collection.
-     * @param {string} id 
-     * @returns {ElementManager}
+     * Remove an element by id. Removes from the DOM and collection.
+     * @param {String} id 
      */
     removeElement(id){
         let element = this.elements.get(id);
         if(element){
             this.wrapper.removeChild(element);
             this.elements.delete(id);
+            this.emit("remove", element);
         }
-        return this;
     }
 
     /**
      * Remove dead elements. 
-     * Cross reference the list of current elements
-     * with an object of data. If the template object's name
-     * is not found in the data, then the template is considered dead (old).
-     * @example // The following objects currently exists in this.elements
-     *           { user1:Template, user2:Template, user3:Template }
-     *          // The following objects exist in the passed in data object
-     *           { user2: {...}, user3: {...} }
-     *          // user1 is missing in the data. Therefore, the template named
-     *          // "user1" is no longer relevant, and is removed.
-     * @param {object} data
-     * @returns {ElementManager}
+     * Cross reference the list of current elements with an object of data. 
+     * If the template object's name is not found in the data, then the
+     * template is considered dead (old).
+     * @example 
+     * // The following objects currently exists in this.elements
+     * {user1:Template, user2:Template, user3:Template}
+     * // The following objects exist in the passed in data object
+     * {user2: {...}, user3: {...}}
+     * // user1 is missing in the data. Therefore, the template named
+     * // "user1" is no longer relevant, and is removed.
+     * @param {Object} data
      */
     removeDeadElements(data){
         for(let [key, element] of this.elements){
             if(!this.getData(data, key)){
                 element.remove();
                 this.elements.delete(key);
+                this.emit("remove", element);
             }
         }
-        return this;
     }
 
     /**
      * Get the type of the data parameter.
-     * @param {object[]|object|Map} data 
-     * @returns {string}
+     * @param {Object[]|Object|Map} data 
+     * @returns {String|Null}
      */
     getDataType(data){
         if(data instanceof Map){
@@ -230,22 +242,38 @@ class ElementManager extends EventSystem {
     }
 
     /**
-     * Get an object of data from a data
-     * parameter based on a key. 
-     * If the data is an array of objects,
-     * match the key with an object.id property.
-     * Otherwise, just match the name of the key
-     * in a map of objects or object of objects.
-     * todo: rename.. to something better
-     * @param {object[]|object|Map} data 
-     * @param {string} key 
-     * @returns {null|object}
+     * Cache data as-is in case the original data is required.
+     * todo: handle array, map, and object
+     * @param {Array|Map|Object} data 
+     */
+    cacheData(data){
+        return Object.extend({}, data);
+    }
+
+    /**
+     * Process data to be used for rendering.
+     * @param {Array|Map|Object} data 
+     * @returns {Array|Map|Object}
+     */
+    processRenderData(data){
+        return data;
+    }
+
+    /**
+     * Get an object of data from a data parameter based on a key. If the data 
+     * is an array of objects, match the key with an object.id property. 
+     * Otherwise, just match the name of the key in a map of objects or object
+     * of objects.
+     * @todo rename.. to something better
+     * @param {Object[]|object|Map} data 
+     * @param {String} key 
+     * @returns {Null|Object}
      */
     getData(data, key){
         switch(this.getDataType(data)){
             case "array":
-                let el = data.filter(function(e){
-                    return e.id === key;
+                let el = data.filter((e) =>{
+                    return e[this.primary_key] === key;
                 });
                 return el && el.length ? el[0] : null;
             case "map":
@@ -258,15 +286,13 @@ class ElementManager extends EventSystem {
     }
 
     /**
-     * Run through each object of data and render the object
-     * into an element. If the data is new, the
-     * element will be appended to the wrapper.
-     * @param {object[]|object|Map} data 
-     * @returns {ElementManager}
+     * Run through each object of data and render the object into an element.
+     * If the data is new, the element will be appended to the wrapper.
+     * @param {Object[]|Object|Map} data 
      */
     render(data){
-        this.cachedData = this.cacheData(data);
-        this.processedRenderData = this.processRenderData(data);
+        this.cached_data = this.cacheData(data);
+        this.render_data = this.processRenderData(data);
         switch(this.getDataType(data)){
             case "array":
                 this.renderArray(data);
@@ -279,34 +305,30 @@ class ElementManager extends EventSystem {
                 this.renderObject(data);
                 break;
         }
-        if(this.options.removeDeadTemplates){
+        if(this.remove_dead_templates){
             this.removeDeadElements(data);
         }
-        return this;
     }
 
     /**
-     * Render elements from an array of data.
-     * Each object must have an "id" property.
-     * @param {object[]} data 
-     * @returns {ElementManager}
+     * Render elements from an array of data. Each object must have an "id"
+     * property.
+     * @param {Object[]} data 
      */
     renderArray(data){
         for(let i = 0; i < data.length; i++){
-            let id = data[i][this.options.primaryKey];
+            let id = data[i][this.primary_key];
             if(typeof id === "undefined"){
-                console.error("ElementManager.renderArray: data must have a primary key property");
+                console.error("Data must have a primary key property");
                 return;
             }
             this.renderElement(id, data[i], i);
         }
-        return this;
     }
 
     /**
      * Render elements from a map of objects.
      * @param {Map} data 
-     * @returns {ElementManager}
      */
     renderMap(data){
         let i = 0;
@@ -314,13 +336,11 @@ class ElementManager extends EventSystem {
             this.renderElement(key, value, i);
             i++;
         }
-        return this;
     }
 
     /**
      * Render elements from an object of objects.
-     * @param {object} data 
-     * @returns {ElementManager}
+     * @param {Object} data 
      */
     renderObject(data){
         let i = 0;
@@ -328,78 +348,69 @@ class ElementManager extends EventSystem {
             this.renderElement(k, data[k], i);
             i++;
         }
-        return this;
     }
 
     /**
-     * Render a single object of data by faking
-     * it as an object of objects.
-     * Note that if removeDeadElements is 
-     * set to true (by default), this will 
+     * Render a single object of data by faking it as an object of objects.
+     * Note that if removeDeadElements is set to true (by default), this will
      * remove all other elements.
-     * @param {string} id 
-     * @param {object} object 
-     * @returns {ElementManager}
+     * @param {String} id 
+     * @param {Object} object 
      */
     renderSingle(id, object){
         let obj = {};
         obj[id] = object;
         this.render(obj);
-        return this;
     }
 
     /**
      * Render an element found in the element collection.
      * If the element does not exist, create it.
-     * @param {number|string} id - element and data identifier
-     * @param {object} data - object of data
-     * @param {number} index - the numerical index of the element
-     * @returns {ElementManager}
+     * @param {Number|String} id - Element and data identifier
+     * @param {Object} data - Object of data
+     * @param {Number} index - The numerical index of the element
      */
     renderElement(id, data, index){
-        let isNew =  false;
+        let is_new =  false;
         let element = this.elements.get(id);
         if(!element){
-            isNew = true;
+            is_new = true;
             element = this.cloneTemplate();
         }
-        
+           
         if(element){
+            this.appendElement(element);  
+
             if(element instanceof Template){
                 element.render(data);
             }
             else {
                 Template.render(element, data);
             }  
-            if(isNew){
+            if(is_new){
                 this.elements.set(id, element); 
             }
-        }
-        
-        this.appendElement(element);             
-
-        return this;
+        }        
     }
 
     /**
-     * Convert an array of objects into an 
-     * object of objects. Each object in the
-     * array must have a primary key.
-     * @param {object[]} dataArr 
-     * @param {string} [primaryKey="id"] - the key that identifies each data object
-     * @returns {object}
+     * Convert an array of objects into an object of objects. Each object in 
+     * the array must have a primary key.
+     * @param {Object[]} data_arr 
+     * @param {String} [primary_key="id"] - The key that identifies each data object
+     * @returns {Object}
      */
-    static dataArrayToDataObject(dataArr, primaryKey = 'id'){
-        let dataObj = {};
-        for(let i = 0; i < dataArr.length; i++){
-            let id = dataArr[i][primaryKey];
+    static dataArrayToDataObject(data_arr, primary_key = 'id'){
+        let data_obj = {};
+        for(let i = 0; i < data_arr.length; i++){
+            let id = data_arr[i][primary_key];
             if(typeof id === "undefined"){
-                console.error(`dataArrayToDataObject: object does not have required "${primaryKey}" value`)
+                console.error(`dataArrayToDataObject: object does not have required "${primary_key}" value`)
             }
             else {
-                dataObj[id] = dataArr[i];
+                data_obj[id] = data_arr[i];
             }
         }
-        return dataObj;
+        return data_obj;
     }
 }
