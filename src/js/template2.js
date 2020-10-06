@@ -677,6 +677,126 @@ class Template extends HTMLElement {
     }
 
     /**************************************************************************
+     * Position
+     *************************************************************************/
+
+    /**
+     * Set the top position
+     * @param {HTMLElement} element 
+     * @param {Number|String} top - If number, set to pixels
+     */
+    static setTop(element, top){
+        if(typeof top === "number"){
+            top += "px";
+        }
+        element.style.top = top;
+    }
+
+    /**
+     * Set the top position
+     * @param {Number|String} top - If number, set to pixels
+     */
+    setTop(top){
+        Template.setTop(this, top);
+    }
+
+    /**
+     * Set the right position
+     * @param {HTMLElement} element 
+     * @param {Number|String} right - If number, set to pixels
+     */
+    static setRight(element, right){
+        if(typeof right === "number"){
+            right += "px";
+        }
+        element.style.right = right;
+    }
+
+    /**
+     * Set the right position
+     * @param {Number|String} right - If number, set to pixels
+     */
+    setRight(right){
+        Template.setRight(this, right);
+    }
+    
+    /**
+     * Set the bottom position
+     * @param {HTMLElement} element 
+     * @param {Number|String} bottom - If number, set to pixels
+     */
+    static setBottom(element, bottom){
+        if(typeof bottom === "number"){
+            bottom += "px";
+        }
+        element.style.bottom = bottom;
+    }
+
+    /**
+     * Set the bottom position
+     * @param {Number|String} bottom - If number, set to pixels
+     */
+    setBottom(bottom){
+        Template.setBottom(this, bottom);
+    }
+
+    /**
+     * Set the left position
+     * @param {HTMLElement} element 
+     * @param {Number|String} left - If number, set to pixels
+     */
+    static setLeft(element, left){
+        if(typeof left === "number"){
+            left += "px";
+        }
+        element.style.left = left;
+    }
+
+    /**
+     * Set the left position
+     * @param {Number|String} left - If number, set to pixels
+     */
+    setLeft(left){
+        Template.setLeft(this, left);
+    }
+
+    /**
+     * Set one or more positions
+     * @param {HTMLElement} element 
+     * @param {Object} params
+     * @param {Number|String} [top] - If number, set to pixels
+     * @param {Number|String} [left] - If number, set to pixels
+     * @param {Number|String} [bottom] - If number, set to pixels
+     * @param {Number|String} [right] - If number, set to pixels
+     */
+    static setPosition(element, {top, left, bottom, right}){
+        if(typeof top !== "undefined"){
+            Template.setTop(element, top);
+        }
+        if(typeof left !== "undefined"){
+            Template.setLeft(element, left);
+        }
+        if(typeof bottom !== "undefined"){
+            Template.setBottom(element, bottom);
+        }
+        if(typeof right !== "undefined"){
+            Template.setRight(element, right);
+        }
+    }
+
+    /**
+     * Set one or more positions
+     * @param {Object} params
+     * @param {Number|String} [top] - If number, set to pixels
+     * @param {Number|String} [left] - If number, set to pixels
+     * @param {Number|String} [bottom] - If number, set to pixels
+     * @param {Number|String} [right] - If number, set to pixels
+     */
+    setPosition({top, left, bottom, right}){
+        Template.setPosition(this, {top, left, bottom, right});
+    }
+
+    /**************************************************************************
      * Class
      *************************************************************************/
 
